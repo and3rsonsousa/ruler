@@ -6,36 +6,49 @@ export function ActionLine({
 	action,
 	categories,
 	states,
+	hasShortDate,
+	hideDate,
 }: {
 	action: Action;
 	categories: Category[];
 	states: State[];
+	hasShortDate?: boolean;
+	hideDate?: boolean;
 }) {
 	return (
 		<div
-			className={`py-1 px-4 text-sm border-l-4 rounded bg-gray-900 flex gap-2 justify-between items-center border-${
+			className={`py-1 px-4 text-sm border-l-4 rounded transition select-none bg-gray-900 hover:bg-gray-800 flex gap-2 justify-between items-center border-${
 				states.find((state) => state.id === action.state_id)?.slug
 			}`}
 		>
-			{/* <div
-		 	className={`py-1 px-4 text-sm rounded bg-gray-900 flex gap-2 justify-between items-center bg-${
-		 		states.find((state) => state.id === action.state_id)?.slug
-		 	}`}
-		 > */}
 			<div className="line-clamp-1">{action.title}</div>
-			<div className="text-gray-400 text-xs tabular-nums text-right whitespace-nowrap">
-				{format(
-					parseISO(action.date),
-					`d 'de' MMMM${
-						!isSameYear(
-							parseISO(action.date).getFullYear(),
-							new Date().getUTCFullYear()
-						)
-							? " 'de' y"
-							: ""
-					}`
-				)}
-			</div>
+			{!hideDate && (
+				<div className="text-gray-400 text-xs tabular-nums text-right whitespace-nowrap">
+					{hasShortDate
+						? format(
+								parseISO(action.date),
+								`d/M${
+									!isSameYear(
+										parseISO(action.date).getFullYear(),
+										new Date().getUTCFullYear()
+									)
+										? "/yy"
+										: ""
+								}`
+						  )
+						: format(
+								parseISO(action.date),
+								`d 'de' MMMM${
+									!isSameYear(
+										parseISO(action.date).getFullYear(),
+										new Date().getUTCFullYear()
+									)
+										? " 'de' y"
+										: ""
+								}`
+						  )}
+				</div>
+			)}
 		</div>
 	);
 }
@@ -139,7 +152,7 @@ export function ListOfActions({
 	states: State[];
 }) {
 	return (
-		<ScrollArea className="h-auto flex-1 overflow-x-hidden">
+		<div className="scrollbars">
 			<div className="h-full flex flex-col gap-1">
 				{actions?.map((action) => (
 					<ActionLine
@@ -150,7 +163,7 @@ export function ListOfActions({
 					/>
 				))}
 			</div>
-		</ScrollArea>
+		</div>
 	);
 }
 
@@ -158,14 +171,24 @@ export function BlockOfActions({
 	actions,
 	categories,
 	states,
+	max,
 }: {
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
+	max?: 1 | 2;
 }) {
 	return (
-		<ScrollArea className="h-auto flex-1 overflow-x-hidden">
-			<div className="h-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+		<div className="scrollbars">
+			<div
+				className={`h-full grid grid-cols-2 ${
+					!max
+						? "grid-cols-2 sm:grid-cols-3 md:grid-cols-4"
+						: max === 2
+						? "grid-cols-2"
+						: ""
+				} gap-2`}
+			>
 				{actions?.map((action) => (
 					<ActionBlock
 						action={action}
@@ -175,7 +198,7 @@ export function BlockOfActions({
 					/>
 				))}
 			</div>
-		</ScrollArea>
+		</div>
 	);
 }
 
@@ -189,7 +212,7 @@ export function GridOfActions({
 	states: State[];
 }) {
 	return (
-		<ScrollArea className="h-full flex-1 overflow-x-hidden">
+		<div className="scrollbars">
 			<div className="h-full grid grid-cols-3 gap-2">
 				{actions?.map((action) => (
 					<ActionGrid
@@ -200,6 +223,6 @@ export function GridOfActions({
 					/>
 				))}
 			</div>
-		</ScrollArea>
+		</div>
 	);
 }

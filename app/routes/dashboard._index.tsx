@@ -1,4 +1,4 @@
-import { useLoaderData, useMatches } from "@remix-run/react";
+import { Link, NavLink, useLoaderData, useMatches } from "@remix-run/react";
 import { LoaderFunctionArgs, MetaFunction, json } from "@vercel/remix";
 import {
 	BriefcaseIcon,
@@ -7,8 +7,11 @@ import {
 	UserCircle2Icon,
 } from "lucide-react";
 import { ActionBlock, ActionLine } from "~/components/structure/Action";
+import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
+import { Button } from "~/components/ui/ui/button";
 import { ScrollArea } from "~/components/ui/ui/scroll-area";
 import {
+	ShortText,
 	getLateActions,
 	getNotFinishedActions,
 	getTodayActions,
@@ -37,7 +40,7 @@ export default function DashboardIndex() {
 	return (
 		<ScrollArea className="h-full">
 			<div className="py-8 flex flex-col gap-8">
-				<div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+				<div className="grid grid-cols-2 md:grid-cols-4 gap-2">
 					{[
 						{
 							id: 1,
@@ -73,7 +76,7 @@ export default function DashboardIndex() {
 						},
 					].map((item) => (
 						<div
-							className="bg-gray-900 hover:bg-primary/20 flex gap-2 justify-between items-center p-4 rounded-xl"
+							className="bg-gray-900 hover:bg-gray-800 transition flex gap-2 justify-between items-center p-4 rounded-xl"
 							key={item.id}
 						>
 							{item.icon}
@@ -83,6 +86,46 @@ export default function DashboardIndex() {
 						</div>
 					))}
 				</div>
+				{/* Clientes */}
+
+				<div className="flex mx-auto w-72 sm:w-96 md:w-full flex-wrap gap-4 justify-center">
+					{clients.map((client) => (
+						<NavLink
+							to={`/dashboard/${client.slug}`}
+							className="hover:ring-4 rounded-full ring-primary transition ring-offset-4 ring-offset-background"
+							prefetch="intent"
+							unstable_viewTransition
+							key={client.id}
+						>
+							{({ isTransitioning }) => (
+								<Avatar
+									key={client.id}
+									style={
+										isTransitioning
+											? {
+													viewTransitionName:
+														"avatar-client",
+											  }
+											: undefined
+									}
+								>
+									<AvatarFallback
+										style={{
+											backgroundColor:
+												client.bgColor || "bg-muted",
+											color:
+												client.fgColor ||
+												"text-gray-300",
+										}}
+									>
+										{ShortText({ text: client.short })}
+									</AvatarFallback>
+								</Avatar>
+							)}
+						</NavLink>
+					))}
+				</div>
+
 				{/* Ações de hoje */}
 				<div>
 					<h1 className="mb-4 text-2xl font-semibold tracking-tight">
@@ -90,7 +133,7 @@ export default function DashboardIndex() {
 					</h1>
 					<div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
 						{getTodayActions(actions)?.map((action) => (
-							<ActionLine
+							<ActionBlock
 								key={action.id}
 								action={action}
 								states={states}

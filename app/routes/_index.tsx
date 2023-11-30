@@ -14,8 +14,8 @@ export default function Index() {
 	return (
 		<div className="h-[100dvh] grid place-content-center">
 			<div className="text-center">
-				<Logo size="lg" />
-				<div className="mb-12 leading-tight">
+				<Logo size="md" />
+				<div className="my-12 leading-tight">
 					Rule your task. <br /> Save your time.
 				</div>
 				<Button asChild variant={"default"}>

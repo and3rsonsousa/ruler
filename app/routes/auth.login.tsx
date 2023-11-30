@@ -40,7 +40,7 @@ export default function Index() {
 		<div className="h-[100dvh] grid place-content-center">
 			<div className="container mx-auto w-full p-8 relative">
 				<div>
-					<Logo size="sm" />
+					<Logo />
 
 					<Form method="post" className="w-60 mt-8">
 						<MyTextField

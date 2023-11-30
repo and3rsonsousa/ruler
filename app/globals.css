@@ -122,3 +122,41 @@
 .bg-item {
 	@apply text-xs px-4 py-2;
 }
+
+.debug-1 {
+	@apply border border-red-500;
+}
+.debug-2 {
+	@apply border border-yellow-500;
+}
+.debug-3 {
+	@apply border border-green-500;
+}
+.debug-4 {
+	@apply border border-sky-500;
+}
+.debug-5 {
+	@apply border border-pink-500;
+}
+
+.scrollbars {
+	@apply pr-1 overflow-hidden h-full overflow-y-auto;
+	scrollbars-gutter: stable;
+}
+
+.scrollbars::-webkit-scrollbar {
+	@apply block w-2 mr-4;
+}
+.scrollbars::-webkit-scrollbar-button {
+	@apply hidden;
+}
+
+.scrollbars::-webkit-scrollbar-track {
+	@apply bg-transparent mr-4;
+}
+.scrollbars::-webkit-scrollbar-track-piece {
+	@apply bg-transparent mr-4;
+}
+.scrollbars::-webkit-scrollbar-thumb {
+	@apply bg-gray-700 rounded-full backdrop-blur-lg outline-black/10;
+}

@@ -6,15 +6,14 @@ import {
 	Scripts,
 	ScrollRestoration,
 	useLoaderData,
-	useNavigation,
 	useRevalidator,
 } from "@remix-run/react";
 
 import { createBrowserClient } from "@supabase/ssr";
-import { useEffect, useState } from "react";
-import "./globals.css";
 import { LoaderFunctionArgs, json } from "@vercel/remix";
 import { Database } from "database";
+import { useEffect, useState } from "react";
+import "./globals.css";
 import createServerClient from "./lib/supabase";
 
 export async function loader({ request }: LoaderFunctionArgs) {
@@ -44,11 +43,6 @@ export default function App() {
 	);
 
 	const serverAccessToken = session?.access_token;
-
-	const navigation = useNavigation();
-	if (navigation.state !== "idle") {
-		console.log("Tá rodando");
-	}
 
 	useEffect(() => {
 		const {
