@@ -1,5 +1,11 @@
-import { Link, NavLink, useLoaderData, useMatches } from "@remix-run/react";
+import {
+	NavLink,
+	useFetchers,
+	useLoaderData,
+	useMatches,
+} from "@remix-run/react";
 import { LoaderFunctionArgs, MetaFunction, json } from "@vercel/remix";
+import { isBefore, parseISO } from "date-fns";
 import {
 	BriefcaseIcon,
 	ListTodoIcon,
@@ -8,7 +14,6 @@ import {
 } from "lucide-react";
 import { ActionBlock, ActionLine } from "~/components/structure/Action";
 import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
-import { Button } from "~/components/ui/ui/button";
 import { ScrollArea } from "~/components/ui/ui/scroll-area";
 import {
 	ShortText,
@@ -33,9 +38,53 @@ export const meta: MetaFunction = () => {
 };
 
 export default function DashboardIndex() {
-	const { actions } = useLoaderData<typeof loader>();
+	let { actions } = useLoaderData<typeof loader>();
 	const { categories, people, states, clients } = useMatches()[1]
 		.data as DashboardDataType;
+
+	const fetchers = useFetchers();
+
+	let optimisticActions = fetchers.reduce<{ [k: string]: any }>((memo, f) => {
+		if (f.formData) {
+			let data = Object.fromEntries(f.formData);
+			if (String(data.action).includes("-update")) {
+				let action = {
+					...(actions!.find(
+						(action) => action.id === data.id
+					) as Action),
+					...data,
+				};
+				console.log({
+					data,
+					action,
+					old: actions!.find(
+						(action) => action.id === data.id
+					) as Action,
+				});
+				let index = actions!.findIndex(
+					(action) => action.id === data.id
+				);
+				actions?.splice(index, 1, action);
+			} else if (
+				!actions
+					?.map((a) => a.id)
+					.includes((data as { [k: string]: any }).id)
+			) {
+				memo.push(data);
+			}
+		}
+		return memo;
+	}, []);
+
+	if (actions) {
+		actions = [...actions, ...(optimisticActions as Action[])];
+	} else {
+		actions = optimisticActions as Action[];
+	}
+
+	actions?.sort((a, b) =>
+		isBefore(parseISO(a.date), parseISO(b.date)) ? -1 : 1
+	);
 
 	return (
 		<ScrollArea className="h-full">

@@ -115,12 +115,43 @@
 	@apply stroke-finished-600;
 }
 
+.border-post {
+	@apply border-post-500;
+}
+.border-video {
+	@apply border-video-600;
+}
+.border-stories {
+	@apply border-stories-500;
+}
+.border-todo {
+	@apply border-todo-500;
+}
+.border-dev {
+	@apply border-dev-500;
+}
+.border-print {
+	@apply border-print-500;
+}
+.border-meeting {
+	@apply border-meeting-500;
+}
+.border-finance {
+	@apply border-finance-500;
+}
+.border-design {
+	@apply border-design-500;
+}
+.border-ads {
+	@apply border-ads-500;
+}
+
 .bg-content {
-	@apply bg-gray-300/5 backdrop-blur-2xl border border-gray-300/25 outline-black/10 mx-4;
+	@apply bg-gray-300/5 backdrop-blur-2xl border border-gray-300/25 outline-black/10;
 }
 
 .bg-item {
-	@apply text-xs px-4 py-2;
+	@apply text-xs px-4 py-2 font-light;
 }
 
 .debug-1 {

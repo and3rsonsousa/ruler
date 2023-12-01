@@ -1,6 +1,18 @@
-import { ScrollArea } from "@radix-ui/react-scroll-area";
 import { format, isSameYear, parseISO } from "date-fns";
+import { CopyIcon, PencilLineIcon, TimerIcon, TrashIcon } from "lucide-react";
 import { FINISHED_ID } from "~/lib/constants";
+import {
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuPortal,
+	ContextMenuSeparator,
+	ContextMenuSub,
+	ContextMenuSubContent,
+	ContextMenuSubTrigger,
+	ContextMenuTrigger,
+} from "../ui/ui/context-menu";
+import { useFetcher, useSubmit } from "@remix-run/react";
 
 export function ActionLine({
 	action,
@@ -62,38 +74,168 @@ export function ActionBlock({
 	categories: Category[];
 	states: State[];
 }) {
+	const fetcher = useFetcher();
+	const submit = useSubmit();
+
+	const handleActions = (data: { [key: string]: string | number }) => {
+		submit(
+			{ ...data, action: "action-update" },
+			{
+				action: "/handle-actions",
+				method: "post",
+				navigate: false,
+			}
+		);
+	};
+
 	return (
-		<div
-			className={`py-2 px-4 text-sm border-l-4 rounded bg-gray-900 hover:bg-gray-800 flex flex-col justify-between gap-2 border-${
-				states.find((state) => state.id === action.state_id)?.slug
-			}`}
-		>
-			<div className="line-clamp-2 leading-tight text-lg font-medium">
-				{action.title}
-			</div>
-			<div className="flex text-gray-400 items-center justify-between">
-				<div className="text-[10px] font-bold tracking-widest uppercase">
-					{
-						categories.find(
-							(category) => category.id === action.category_id
-						)?.title
-					}
+		<ContextMenu>
+			<ContextMenuTrigger>
+				<div
+					className={`py-2 px-4 text-sm border-l-4 rounded bg-gray-900 hover:bg-gray-800 flex flex-col justify-between gap-2 border-${
+						states.find(
+							(state) => state.id === Number(action.state_id)
+						)?.slug
+					}`}
+				>
+					<div className="line-clamp-1 leading-tight text-lg font-medium">
+						{action.title}
+					</div>
+					<div className="flex text-gray-400 items-center justify-between">
+						<div className="text-[10px] font-bold tracking-widest uppercase">
+							{
+								categories.find(
+									(category) =>
+										category.id === action.category_id
+								)?.title
+							}
+						</div>
+						<div className=" text-xs tabular-nums text-right whitespace-nowrap">
+							{format(
+								parseISO(action.date),
+								`d 'de' MMM${
+									!isSameYear(
+										parseISO(action.date).getFullYear(),
+										new Date().getUTCFullYear()
+									)
+										? " 'de' y"
+										: ""
+								} '-' H'h'm`
+							)}
+						</div>
+					</div>
 				</div>
-				<div className=" text-xs tabular-nums text-right whitespace-nowrap">
-					{format(
-						parseISO(action.date),
-						`d 'de' MMM${
-							!isSameYear(
-								parseISO(action.date).getFullYear(),
-								new Date().getUTCFullYear()
-							)
-								? " 'de' y"
-								: ""
-						} '-' H'h'm`
-					)}
-				</div>
-			</div>
-		</div>
+			</ContextMenuTrigger>
+			<ContextMenuContent className="bg-content">
+				<ContextMenuItem className="bg-item focus:bg-primary flex gap-2 items-center">
+					<PencilLineIcon className="w-3 h-3" />
+					<span>Editar</span>
+				</ContextMenuItem>
+				<ContextMenuItem className="bg-item focus:bg-primary flex gap-2 items-center">
+					<CopyIcon className="w-3 h-3" />
+					<span>Duplicar</span>
+				</ContextMenuItem>
+				{/* Adiar */}
+				<ContextMenuSub>
+					<ContextMenuSubTrigger className="bg-item focus:bg-primary flex gap-2 items-center">
+						<TimerIcon className="w-3 h-3" />
+						<span>Adiar</span>
+					</ContextMenuSubTrigger>
+					<ContextMenuPortal>
+						<ContextMenuSubContent className="bg-content">
+							{[
+								{ time: 1, text: "1 hora" },
+								{ time: 3, text: "3 horas" },
+								{ time: 8, text: "8 horas" },
+								{ time: 24, text: "1 dia" },
+								{ time: 3 * 24, text: "3 dias" },
+								{ time: 7 * 24, text: "1 semana" },
+								{ time: 30 * 24, text: "30 dias" },
+							].map((period) => (
+								<ContextMenuItem
+									key={period.time}
+									className="bg-item focus:bg-primary flex gap-2 items-center"
+								>
+									{period.text}
+								</ContextMenuItem>
+							))}
+						</ContextMenuSubContent>
+					</ContextMenuPortal>
+				</ContextMenuSub>
+				{/* Deletar */}
+				<ContextMenuItem className="bg-item focus:bg-primary flex gap-2 items-center">
+					<TrashIcon className="w-3 h-3" />
+					<span>Deletar</span>
+				</ContextMenuItem>
+				<ContextMenuSeparator className="bg-gray-300/25 " />
+				{/* Categoria */}
+				<ContextMenuSub>
+					<ContextMenuSubTrigger className="bg-item focus:bg-primary flex gap-2 items-center">
+						<TimerIcon className="w-3 h-3" />
+						<span>
+							{
+								categories.find(
+									(category) =>
+										category.id === action.category_id
+								)?.title
+							}
+						</span>
+					</ContextMenuSubTrigger>
+					<ContextMenuPortal>
+						<ContextMenuSubContent className="bg-content">
+							{categories.map((category) => (
+								<ContextMenuItem
+									key={category.id}
+									className="bg-item focus:bg-primary flex gap-2 items-center"
+								>
+									{category.title}
+								</ContextMenuItem>
+							))}
+						</ContextMenuSubContent>
+					</ContextMenuPortal>
+				</ContextMenuSub>
+				{/* States */}
+				<ContextMenuSub>
+					<ContextMenuSubTrigger className="bg-item focus:bg-primary flex gap-2 items-center">
+						<div
+							className={`w-2 h-2 rounded-full border-2 border-${
+								states.find(
+									(state) => state.id === action.state_id
+								)?.slug
+							}`}
+						></div>
+						<span>
+							{
+								states.find(
+									(state) => state.id === action.state_id
+								)?.title
+							}
+						</span>
+					</ContextMenuSubTrigger>
+					<ContextMenuPortal>
+						<ContextMenuSubContent className="bg-content">
+							{states.map((state) => (
+								<ContextMenuItem
+									key={state.id}
+									className="bg-item focus:bg-primary flex gap-2 items-center"
+									onSelect={() => {
+										handleActions({
+											id: action.id,
+											state_id: state.id,
+										});
+									}}
+								>
+									<div
+										className={`w-2 h-2 rounded-full border-2 border-${state?.slug}`}
+									></div>
+									<span>{state.title}</span>
+								</ContextMenuItem>
+							))}
+						</ContextMenuSubContent>
+					</ContextMenuPortal>
+				</ContextMenuSub>
+			</ContextMenuContent>
+		</ContextMenu>
 	);
 }
 

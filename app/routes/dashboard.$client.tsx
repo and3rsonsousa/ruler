@@ -1,6 +1,7 @@
 import { Link, Outlet, useLoaderData, useNavigate } from "@remix-run/react";
 import { LoaderFunctionArgs, json, redirect } from "@vercel/remix";
 import {
+	differenceInDays,
 	endOfMonth,
 	endOfWeek,
 	format,
@@ -26,7 +27,13 @@ import createServerClient from "~/lib/supabase";
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const [headers, supabase] = createServerClient(request);
 	const urlRange = new URL(request.url).searchParams.get("range");
-	let range = urlRange
+
+	let range = request.url.includes("/calendar")
+		? {
+				from: startOfWeek(startOfMonth(new Date())),
+				to: endOfWeek(endOfMonth(new Date())),
+		  }
+		: urlRange
 		? {
 				from: parseISO(urlRange.split("---")[0]),
 				to: parseISO(urlRange.split("---")[1]),
@@ -59,10 +66,13 @@ export default function DashboardClient() {
 	const { client, actions, range } = useLoaderData<typeof loader>();
 	const navigate = useNavigate();
 
-	const [date, setDate] = useState<DateRange | undefined>({
-		from: parseISO(range.from),
-		to: parseISO(range.to),
+	const [date, setDate] = useState({
+		from: parseISO(range.from) as Date,
+		to: parseISO(range.to) as Date,
 	});
+
+	const isMonth =
+		date?.to && date?.from ? differenceInDays(date?.to, date?.from) : 30;
 
 	return (
 		<div className="overflow-hidden debug h-full flex flex-col pb-4 gap-8">
@@ -119,69 +129,83 @@ export default function DashboardClient() {
 							</Link>
 						</Button>
 					</div>
-					<Popover>
-						<PopoverTrigger asChild>
-							<Button
-								variant={date ? "secondary" : "ghost"}
-								className="flex gap-2"
-							>
-								{date?.from && date?.to ? (
-									<>
-										{format(
-											date.from,
-											`d 'de' MMM${
-												date.from.getFullYear() !==
-												new Date().getFullYear()
-													? ",y"
-													: ""
-											}`
-										)}
+					{true ? (
+						<div className="flex gap-1">
+							<Button>Mês</Button>
+							<Button>Semana</Button>
+						</div>
+					) : (
+						<Popover>
+							<PopoverTrigger asChild>
+								<Button
+									variant={date ? "secondary" : "ghost"}
+									className="flex gap-2"
+								>
+									{date?.from && date?.to ? (
+										<>
+											{format(
+												date.from,
+												`d 'de' MMM${
+													date.from.getFullYear() !==
+													new Date().getFullYear()
+														? ",y"
+														: ""
+												}`
+											)}
 
-										{" a "}
-										{format(
-											date.to,
-											`d 'de' MMM${
-												date.to.getFullYear() !==
-												new Date().getFullYear()
-													? ",y"
-													: ""
-											}`
-										)}
-									</>
-								) : (
-									"Selecione um período"
-								)}
-								<ChevronDownIcon className="w-4" />
-							</Button>
-						</PopoverTrigger>
-						<PopoverContent
-							align="start"
-							className="bg-content w-auto p-0"
-						>
-							<Calendar
-								initialFocus
-								mode="range"
-								defaultMonth={new Date()}
-								selected={date}
-								onSelect={(value) => {
-									setDate(value);
-									if (value?.from && value.to) {
-										navigate(
-											`/dashboard/${
-												client.slug
-											}?range=${format(
-												value?.from,
-												"yyyy-MM-dd"
-											)}---${format(
-												value.to,
-												"yyyy-MM-dd"
-											)}`
-										);
-									}
-								}}
-							/>
-						</PopoverContent>
-					</Popover>
+											{" a "}
+											{format(
+												date.to,
+												`d 'de' MMM${
+													date.to.getFullYear() !==
+													new Date().getFullYear()
+														? ",y"
+														: ""
+												}`
+											)}
+										</>
+									) : (
+										"Selecione um período"
+									)}
+									<ChevronDownIcon className="w-4" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent
+								align="start"
+								className="bg-content w-auto p-0"
+							>
+								<Calendar
+									initialFocus
+									mode="range"
+									defaultMonth={new Date()}
+									selected={date}
+									onSelect={(value) => {
+										if (value != undefined) {
+											setDate(
+												value as {
+													from: Date;
+													to: Date;
+												}
+											);
+											if (value?.from && value.to) {
+												navigate(
+													`/dashboard/${
+														client.slug
+													}?range=${format(
+														value?.from,
+														"yyyy-MM-dd"
+													)}---${format(
+														value.to,
+														"yyyy-MM-dd"
+													)}`
+												);
+											}
+										}
+									}}
+								/>
+							</PopoverContent>
+						</Popover>
+					)}
 				</div>
 			</div>
 			<Outlet />

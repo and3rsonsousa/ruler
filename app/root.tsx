@@ -69,6 +69,7 @@ export default function App() {
 					name="viewport"
 					content="width=device-width, initial-scale=1"
 				/>
+				<link rel="icon" href="/ico.svg" />
 				<Meta />
 				<Links />
 			</head>
