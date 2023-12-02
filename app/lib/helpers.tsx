@@ -40,15 +40,16 @@ export function getNotFinishedActions(actions: Action[] | null) {
 	);
 }
 
-export function getTodayActions(actions: Action[] | null) {
+export function getTodayActions(actions: Action[] | null, finished?: boolean) {
 	return actions?.filter(
 		(action) =>
-			isToday(parseISO(action.date)) && action.state_id !== FINISHED_ID
+			isToday(parseISO(action.date)) &&
+			(finished || action.state_id !== FINISHED_ID)
 	);
 }
 
 export function getInstagramActions(actions: Action[] | null) {
 	return actions?.filter((action) =>
-		[POST_ID, VIDEO_ID].includes(action.category_id)
+		[POST_ID, VIDEO_ID].includes(Number(action.category_id))
 	);
 }

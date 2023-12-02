@@ -30,8 +30,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
 	let range = request.url.includes("/calendar")
 		? {
-				from: startOfWeek(startOfMonth(new Date())),
-				to: endOfWeek(endOfMonth(new Date())),
+				from: startOfWeek(startOfMonth(new Date()), {
+					weekStartsOn: 0,
+				}),
+				to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
 		  }
 		: urlRange
 		? {
@@ -39,9 +41,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 				to: parseISO(urlRange.split("---")[1]),
 		  }
 		: {
-				from: startOfWeek(startOfMonth(new Date())),
-				to: endOfWeek(endOfMonth(new Date())),
+				from: startOfWeek(startOfMonth(new Date()), {
+					weekStartsOn: 0,
+				}),
+				to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
 		  };
+
+	console.log({
+		range,
+		date: startOfWeek(startOfMonth(new Date()), { weekStartsOn: 0 }),
+	});
 
 	if (params.client) {
 		const { data: client } = await supabase
@@ -72,7 +81,9 @@ export default function DashboardClient() {
 	});
 
 	const isMonth =
-		date?.to && date?.from ? differenceInDays(date?.to, date?.from) : 30;
+		date?.to && date?.from
+			? differenceInDays(date?.to, date?.from) > 7
+			: false;
 
 	return (
 		<div className="overflow-hidden debug h-full flex flex-col pb-4 gap-8">
@@ -131,8 +142,8 @@ export default function DashboardClient() {
 					</div>
 					{true ? (
 						<div className="flex gap-1">
-							<Button>Mês</Button>
-							<Button>Semana</Button>
+							<Button variant="ghost">Mês</Button>
+							<Button variant="ghost">Semana</Button>
 						</div>
 					) : (
 						<Popover>
@@ -208,7 +219,7 @@ export default function DashboardClient() {
 					)}
 				</div>
 			</div>
-			<Outlet />
+			<Outlet context={{ isMonth, range, actions, client }} />
 		</div>
 	);
 }

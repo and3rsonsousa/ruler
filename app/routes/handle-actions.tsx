@@ -7,8 +7,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
 	let { action, id, ...values } = Object.fromEntries(formData.entries());
 
-	console.log(values);
-
 	if (action === "action-update") {
 		const data = await supabase
 			.from("actions")

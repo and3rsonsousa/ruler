@@ -1,5 +1,7 @@
 import {
 	Link,
+	useFetcher,
+	useFetchers,
 	useMatches,
 	useNavigation,
 	useOutletContext,
@@ -26,6 +28,8 @@ export default function Header() {
 	const { clients } = matches[1].data as DashboardDataType;
 	const { client } = matches[1].params;
 
+	const fetchers = useFetchers();
+
 	return (
 		<header className="container mx-auto h-16 top-0 px-4 sm:px-8 left-0 right-0 fixed backdrop-blur-2xl bg-background/25 items-center flex-grow flex-shrink-0 flex justify-between z-10">
 			<div className="flex items-center gap-2">
@@ -33,7 +37,8 @@ export default function Header() {
 					<Logo />
 				</Link>
 
-				{navigation.state !== "idle" && (
+				{(navigation.state !== "idle" ||
+					fetchers.filter((f) => f.formData).length > 0) && (
 					<div className="w-6 h-6 border-4 border-primary border-b-primary/50 animate-spin rounded-full"></div>
 				)}
 			</div>

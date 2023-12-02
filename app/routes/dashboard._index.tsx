@@ -12,9 +12,12 @@ import {
 	MoonStarIcon,
 	UserCircle2Icon,
 } from "lucide-react";
+import { useState } from "react";
 import { ActionBlock, ActionLine } from "~/components/structure/Action";
 import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
+import { Button } from "~/components/ui/ui/button";
 import { ScrollArea } from "~/components/ui/ui/scroll-area";
+import { Toggle } from "~/components/ui/ui/toggle";
 import {
 	ShortText,
 	getLateActions,
@@ -25,7 +28,10 @@ import createServerClient from "~/lib/supabase";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const [headers, supabase] = createServerClient(request);
-	const { data: actions } = await supabase.from("actions").select("*");
+	const { data: actions } = await supabase
+		.from("actions")
+		.select("*")
+		.order("created_at", { ascending: true });
 	return json({ headers, actions });
 }
 
@@ -39,10 +45,11 @@ export const meta: MetaFunction = () => {
 
 export default function DashboardIndex() {
 	let { actions } = useLoaderData<typeof loader>();
+	const fetchers = useFetchers();
+	const [allActions, setAllActions] = useState(false);
+
 	const { categories, people, states, clients } = useMatches()[1]
 		.data as DashboardDataType;
-
-	const fetchers = useFetchers();
 
 	let optimisticActions = fetchers.reduce<{ [k: string]: any }>((memo, f) => {
 		if (f.formData) {
@@ -54,13 +61,7 @@ export default function DashboardIndex() {
 					) as Action),
 					...data,
 				};
-				console.log({
-					data,
-					action,
-					old: actions!.find(
-						(action) => action.id === data.id
-					) as Action,
-				});
+
 				let index = actions!.findIndex(
 					(action) => action.id === data.id
 				);
@@ -70,6 +71,7 @@ export default function DashboardIndex() {
 					?.map((a) => a.id)
 					.includes((data as { [k: string]: any }).id)
 			) {
+				//INSERIR AÇÕES CRIADAS
 				memo.push(data);
 			}
 		}
@@ -177,11 +179,28 @@ export default function DashboardIndex() {
 
 				{/* Ações de hoje */}
 				<div>
-					<h1 className="mb-4 text-2xl font-semibold tracking-tight">
-						Hoje
-					</h1>
+					<div className="flex justify-between items-center">
+						<h1 className="mb-4 text-2xl font-semibold tracking-tight">
+							Hoje
+						</h1>
+						<div>
+							<Toggle
+								pressed={allActions}
+								onPressedChange={(pressed) =>
+									setAllActions(pressed)
+								}
+								size="sm"
+							>
+								<span className="text-xs">
+									{allActions
+										? "Ocultar ações finalizadas"
+										: "Mostrar ações finalizadas"}
+								</span>
+							</Toggle>
+						</div>
+					</div>
 					<div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
-						{getTodayActions(actions)?.map((action) => (
+						{getTodayActions(actions, allActions)?.map((action) => (
 							<ActionBlock
 								key={action.id}
 								action={action}

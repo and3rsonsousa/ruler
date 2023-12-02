@@ -26,4 +26,11 @@ declare global {
 		client: Client;
 		range: DateRange;
 	};
+
+	type DashboardClientCalendarType = {
+		isMonth: boolean;
+		actions: Action[];
+		client: Client;
+		range: DateRange;
+	};
 }

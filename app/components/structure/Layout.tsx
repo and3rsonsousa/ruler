@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Header from "./Header";
+import CreateAction from "./CreateAction";
 
 export default function Layout({ children }: { children: ReactNode }) {
 	return (
@@ -11,6 +12,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 			<div className="md:overflow-hidden flex h-full flex-col">
 				{children}
 			</div>
+			<CreateAction />
 		</div>
 	);
 }
