@@ -15,6 +15,7 @@ import { Database } from "database";
 import { useEffect, useState } from "react";
 import "./globals.css";
 import createServerClient from "./lib/supabase";
+import { Toaster } from "./components/ui/ui/toaster";
 
 export async function loader({ request }: LoaderFunctionArgs) {
 	const env = {
@@ -75,6 +76,7 @@ export default function App() {
 			</head>
 			<body>
 				<Outlet context={{ supabase }} />
+				<Toaster />
 				<ScrollRestoration />
 				<Scripts />
 				<LiveReload />

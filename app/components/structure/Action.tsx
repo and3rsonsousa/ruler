@@ -1,5 +1,5 @@
 import { useNavigate, useSubmit } from "@remix-run/react";
-import { format, isSameYear, parseISO } from "date-fns";
+import { addHours, format, isSameYear, parseISO } from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
 import { CopyIcon, PencilLineIcon, TimerIcon, TrashIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -15,6 +15,8 @@ import {
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
 } from "../ui/ui/context-menu";
+import { CategoryIcons, ShortText } from "~/lib/helpers";
+import { Avatar, AvatarFallback } from "../ui/ui/avatar";
 
 export function ActionLine({
 	action,
@@ -35,7 +37,7 @@ export function ActionLine({
 
 	const handleActions = (data: { [key: string]: string | number }) => {
 		submit(
-			{ ...data, action: "action-update" },
+			{ ...data },
 			{
 				action: "/handle-actions",
 				method: "post",
@@ -48,9 +50,12 @@ export function ActionLine({
 		<ContextMenu>
 			<ContextMenuTrigger>
 				<div
-					className={`py-1 px-2 @[180px]:px-4 text-sm border-l-4 rounded transition select-none ${
-						edit ? "bg-gray-700" : "hover:bg-gray-800"
-					} bg-gray-900  flex gap-2 justify-between items-center border-${
+					title={action.title}
+					className={`py-1 px-2 @[180px]:px-4 text-xs text-gray-400 font-medium border-l-4 rounded transition select-none ${
+						edit
+							? "bg-gray-700"
+							: "hover:bg-gray-800 hover:text-gray-200"
+					} bg-gray-900 flex gap-2 justify-between items-center border-${
 						states.find(
 							(state) => state.id === Number(action.state_id)
 						)?.slug
@@ -69,7 +74,7 @@ export function ActionLine({
 							handleActions={handleActions}
 						/>
 					) : null}
-					<div className="line-clamp-1 font-medium">
+					<div className="line-clamp-1">
 						{edit ? (
 							<input
 								type="text"
@@ -138,10 +143,12 @@ export function ActionBlock({
 	action,
 	categories,
 	states,
+	client,
 }: {
 	action: Action;
 	categories: Category[];
 	states: State[];
+	client?: Client;
 }) {
 	const submit = useSubmit();
 	// const navigate = useNavigate();
@@ -149,7 +156,7 @@ export function ActionBlock({
 
 	const handleActions = (data: { [key: string]: string | number }) => {
 		submit(
-			{ ...data, action: "action-update" },
+			{ ...data },
 			{
 				action: "/handle-actions",
 				method: "post",
@@ -184,14 +191,43 @@ export function ActionBlock({
 						{action.title}
 					</div>
 					<div className="flex text-gray-400 items-center justify-between">
-						<div className="text-[10px] font-bold tracking-widest uppercase">
-							{
+						{client ? (
+							<Avatar className="w-5 h-5">
+								<AvatarFallback
+									style={{
+										backgroundColor:
+											client.bgColor || "#999",
+										color: client.fgColor || "#333",
+									}}
+								>
+									<ShortText
+										text={client.short}
+										className="scale-[0.6]"
+									/>
+								</AvatarFallback>
+							</Avatar>
+						) : // <div className="text-[10px] font-bold line-clamp-1 uppercase">
+						// 	{client?.short}
+						// </div>
+						null}
+						<div className=" tracking-widest uppercase ">
+							{/* {
 								categories.find(
 									(category) =>
 										category.id ===
 										Number(action.category_id)
 								)?.title
-							}
+							} */}
+							<CategoryIcons
+								id={
+									categories.find(
+										(category) =>
+											category.id ===
+											Number(action.category_id)
+									)?.slug
+								}
+								className="w-4"
+							/>
 						</div>
 						<div className=" text-xs tabular-nums text-right whitespace-nowrap">
 							{format(
@@ -229,42 +265,75 @@ export function ActionGrid({
 	states: State[];
 	categories: Category[];
 }) {
-	return (
-		<div
-			className={`flex select-none p-4 flex-col rounded-xl justify-between items-center aspect-square ${
-				action.state_id === FINISHED_ID
-					? "bg-gray-900 text-gray-500"
-					: "bg-gray-800"
-			}`}
-		>
-			<div></div>
-			<div
-				className={`font-medium line-clamp-3 text-center  ${
-					action.title.length > 30
-						? "text-sm leading-tight"
-						: action.title.length > 18
-						? "text-lg tracking-tight leading-[1.15]"
-						: "text-2xl tracking-tight leading-none"
-				}`}
-			>
-				{action.title}
-			</div>
-			<div className="flex leading-none justify-center items-center gap-2">
-				<div
-					className={`w-2 h-2 rounded-full bg-${
-						states.find(
-							(state) => state.id === Number(action.state_id)
-						)?.slug
-					}`}
-				></div>
+	const [isHover, setHover] = useState(false);
+	const submit = useSubmit();
 
-				<div className="text-[10px] text-gray-400">
-					{format(parseISO(action.date), "E, d 'de' MMM", {
-						locale: ptBR,
-					})}
+	const handleActions = (data: { [key: string]: string | number }) => {
+		submit(
+			{ ...data },
+			{
+				action: "/handle-actions",
+				method: "post",
+				navigate: false,
+			}
+		);
+	};
+
+	return (
+		<ContextMenu>
+			<ContextMenuTrigger>
+				<div
+					className={`flex select-none p-4 flex-col rounded-xl justify-between items-center aspect-square ${
+						action.state_id === FINISHED_ID
+							? "bg-gray-900 text-gray-500"
+							: "bg-gray-800"
+					}`}
+					onMouseEnter={() => setHover(true)}
+					onMouseLeave={() => setHover(false)}
+				>
+					{isHover ? (
+						<ShortcutActions
+							action={action}
+							handleActions={handleActions}
+						/>
+					) : null}
+					<div></div>
+					<div
+						className={`font-medium line-clamp-3 text-center  ${
+							action.title.length > 30
+								? "text-sm leading-tight"
+								: action.title.length > 18
+								? "text-lg tracking-tight leading-[1.15]"
+								: "text-2xl tracking-tight leading-none"
+						}`}
+					>
+						{action.title}
+					</div>
+					<div className="flex leading-none justify-center items-center gap-2">
+						<div
+							className={`w-2 h-2 rounded-full bg-${
+								states.find(
+									(state) =>
+										state.id === Number(action.state_id)
+								)?.slug
+							}`}
+						></div>
+
+						<div className="text-[10px] text-gray-400">
+							{format(parseISO(action.date), "E, d 'de' MMM", {
+								locale: ptBR,
+							})}
+						</div>
+					</div>
 				</div>
-			</div>
-		</div>
+			</ContextMenuTrigger>
+			<ContextMenuItems
+				action={action}
+				categories={categories}
+				handleActions={handleActions}
+				states={states}
+			/>
+		</ContextMenu>
 	);
 }
 
@@ -345,7 +414,7 @@ export function GridOfActions({
 }) {
 	return (
 		<div className="scrollbars">
-			<div className="h-full grid grid-cols-3 gap-2">
+			<div className="h-full grid grid-cols-3 gap-2 place-content-start">
 				{actions?.map((action) => (
 					<ActionGrid
 						action={action}
@@ -403,11 +472,11 @@ function ShortcutActions({
 				navigate(`/dashboard/action/${action.id}`);
 			}
 			if (key === "d") {
-				handleActions({ id: action.id, action: "duplicate-action" });
+				handleActions({ id: action.id, action: "action-duplicate" });
 			}
 
 			if (key === "x") {
-				// deleteAction();
+				handleActions({ id: action.id, action: "action-delete" });
 			}
 		};
 		window.addEventListener("keydown", keyDown);
@@ -459,6 +528,21 @@ function ContextMenuItems({
 							<ContextMenuItem
 								key={period.time}
 								className="bg-item focus:bg-primary flex gap-2 items-center"
+								onSelect={() => {
+									let date = format(
+										addHours(
+											parseISO(action.date),
+											period.time
+										),
+										"y-MM-dd h:m:s"
+									);
+
+									handleActions({
+										action: "action-update",
+										id: action.id,
+										date,
+									});
+								}}
 							>
 								{period.text}
 							</ContextMenuItem>

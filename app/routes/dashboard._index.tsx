@@ -206,6 +206,9 @@ export default function DashboardIndex() {
 								action={action}
 								states={states}
 								categories={categories}
+								client={clients.find(
+									(client) => action.client_id === client.id
+								)}
 							/>
 						))}
 					</div>

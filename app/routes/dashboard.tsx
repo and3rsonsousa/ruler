@@ -30,7 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		supabase.from("states").select("*").order("order", { ascending: true }),
 	]);
 
-	return { clients, people, categories, states, headers };
+	return { clients, people, categories, states, session, headers };
 }
 
 export default function Dashboard() {

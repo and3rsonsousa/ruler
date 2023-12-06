@@ -1,4 +1,5 @@
 import { ActionFunctionArgs } from "@vercel/remix";
+import { PRIORITY_MEDIUM } from "~/lib/constants";
 import createServerClient from "~/lib/supabase";
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -7,11 +8,37 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 	const formData = await request.formData();
 	let { action, id, ...values } = Object.fromEntries(formData.entries());
 
-	if (action === "action-update") {
+	if (action === "action-create") {
+		const actionToInsert = {
+			id: id.toString(),
+			category_id: Number(values["category_id"]),
+			state_id: Number(values["state_id"]),
+			client_id: Number(values["client_id"]),
+			date: values["date"].toString(),
+			description: values["description"].toString(),
+			title: values["title"].toString(),
+			responsibles: values["responsibles"].toString().split(","),
+			user_id: values["user_id"].toString(),
+			priority_id: PRIORITY_MEDIUM,
+		};
+
+		const { data, error } = await supabase
+			.from("actions")
+			.insert(actionToInsert)
+			.select()
+			.single();
+
+		return { data, error };
+	} else if (action === "action-update") {
 		const data = await supabase
 			.from("actions")
 			.update({ ...values })
 			.eq("id", id);
+		return { data };
+	} else if (action === "action-delete") {
+		const data = await supabase.from("actions").delete().eq("id", id);
+
+		return { data };
 	}
 
 	return {};

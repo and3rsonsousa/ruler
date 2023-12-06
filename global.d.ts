@@ -1,4 +1,4 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import { Session, SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "database";
 import { DateRange } from "react-day-picker";
 
@@ -19,6 +19,7 @@ declare global {
 		people: People;
 		categories: Category[];
 		states: State[];
+		session: Session;
 	};
 
 	type DashboardClientType = {
@@ -32,5 +33,16 @@ declare global {
 		actions: Action[];
 		client: Client;
 		range: DateRange;
+	};
+
+	type RawAction = {
+		title: string;
+		description: string;
+		client_id?: number;
+		category_id: number;
+		state_id: number;
+		date: Date;
+		user_id: string;
+		responsibles: string[];
 	};
 }

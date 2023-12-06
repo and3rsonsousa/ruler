@@ -154,6 +154,10 @@
 	@apply text-xs px-4 py-2 font-light;
 }
 
+.bg-select-item {
+	@apply text-xs pr-4 pl-8 py-2 font-light;
+}
+
 .debug-1 {
 	@apply border border-red-500;
 }
@@ -190,4 +194,9 @@
 }
 .scrollbars::-webkit-scrollbar-thumb {
 	@apply bg-gray-700 rounded-full backdrop-blur-lg outline-black/10;
+}
+
+[contenteditable="true"]:empty:before {
+	@apply text-gray-500;
+	content: attr(placeholder);
 }

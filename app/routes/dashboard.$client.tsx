@@ -1,10 +1,17 @@
-import { Link, Outlet, useLoaderData, useNavigate } from "@remix-run/react";
+import {
+	Link,
+	Outlet,
+	useFetchers,
+	useLoaderData,
+	useNavigate,
+} from "@remix-run/react";
 import { LoaderFunctionArgs, json, redirect } from "@vercel/remix";
 import {
 	differenceInDays,
 	endOfMonth,
 	endOfWeek,
 	format,
+	isBefore,
 	parseISO,
 	startOfMonth,
 	startOfWeek,
@@ -47,11 +54,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 				to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
 		  };
 
-	console.log({
-		range,
-		date: startOfWeek(startOfMonth(new Date()), { weekStartsOn: 0 }),
-	});
-
 	if (params.client) {
 		const { data: client } = await supabase
 			.from("clients")
@@ -66,14 +68,16 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 				.gte("date", format(range.from, "yyyy-MM-dd 0:0:0"))
 				.lte("date", format(range.to, "yyyy-MM-dd 23:59:59"))
 				.order("date", { ascending: false });
+
 			return json({ client, actions, range, headers });
 		}
 	} else return redirect("/dashboard");
 }
 
 export default function DashboardClient() {
-	const { client, actions, range } = useLoaderData<typeof loader>();
+	let { client, actions, range } = useLoaderData<typeof loader>();
 	const navigate = useNavigate();
+	const fetchers = useFetchers();
 
 	const [date, setDate] = useState({
 		from: parseISO(range.from) as Date,
@@ -84,6 +88,43 @@ export default function DashboardClient() {
 		date?.to && date?.from
 			? differenceInDays(date?.to, date?.from) > 7
 			: false;
+
+	let optimisticActions = fetchers.reduce<{ [k: string]: any }>((memo, f) => {
+		if (f.formData) {
+			let data = Object.fromEntries(f.formData);
+			if (String(data.action).includes("-update")) {
+				let action = {
+					...(actions!.find(
+						(action) => action.id === data.id
+					) as Action),
+					...data,
+				};
+
+				let index = actions!.findIndex(
+					(action) => action.id === data.id
+				);
+				actions?.splice(index, 1, action);
+			} else if (
+				!actions
+					?.map((a) => a.id)
+					.includes((data as { [k: string]: any }).id)
+			) {
+				//INSERIR AÇÕES CRIADAS
+				memo.push(data);
+			}
+		}
+		return memo;
+	}, []);
+
+	if (actions) {
+		actions = [...actions, ...(optimisticActions as Action[])];
+	} else {
+		actions = optimisticActions as Action[];
+	}
+
+	actions?.sort((a, b) =>
+		isBefore(parseISO(a.date), parseISO(b.date)) ? -1 : 1
+	);
 
 	return (
 		<div className="overflow-hidden debug h-full flex flex-col pb-4 gap-8">

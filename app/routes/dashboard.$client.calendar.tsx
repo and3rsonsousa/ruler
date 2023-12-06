@@ -7,6 +7,7 @@ import {
 	isSameDay,
 	isSameMonth,
 	isSameYear,
+	isToday,
 	parseISO,
 	startOfWeek,
 } from "date-fns";
@@ -74,7 +75,13 @@ export default function ClientCalendar() {
 									: ""
 							}`}
 						>
-							<span className="font-bold">
+							<span
+								className={`font-bold h-5 w-5 rounded-full ${
+									isToday(day.date)
+										? " bg-primary text-primary-foreground -ml-1 text-center"
+										: ""
+								}`}
+							>
 								{day.date.getDate()}
 							</span>
 							<span className="md:hidden font-medium">
