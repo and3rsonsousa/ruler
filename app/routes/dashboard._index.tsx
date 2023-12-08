@@ -15,7 +15,6 @@ import {
 import { useState } from "react";
 import { ActionBlock, ActionLine } from "~/components/structure/Action";
 import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
-import { Button } from "~/components/ui/ui/button";
 import { ScrollArea } from "~/components/ui/ui/scroll-area";
 import { Toggle } from "~/components/ui/ui/toggle";
 import {
@@ -31,7 +30,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
 	const { data: actions } = await supabase
 		.from("actions")
 		.select("*")
-		.order("created_at", { ascending: true });
+		.order("title", { ascending: true })
+		.order("date", { ascending: false })
+		.order("created_at", { ascending: false });
 	return json({ headers, actions });
 }
 
@@ -66,6 +67,30 @@ export default function DashboardIndex() {
 					(action) => action.id === data.id
 				);
 				actions?.splice(index, 1, action);
+			} else if (String(data.action).includes("-duplicate")) {
+				let action = {
+					...(actions!.find(
+						(action) => action.id === data.id
+					) as Action),
+				};
+				let duplicatedAction = actions!.find(
+					(action) => action.id === data["newId"].toString()
+				);
+
+				if (duplicatedAction === undefined) {
+					duplicatedAction = {
+						...action,
+						id: data["newId"].toString(),
+						created_at: data["created_at"].toString(),
+						updated_at: data["updated_at"].toString(),
+					};
+					actions?.push(duplicatedAction);
+				}
+			} else if (String(data.action).includes("-delete")) {
+				let index = actions!.findIndex(
+					(action) => action.id === data.id
+				);
+				actions?.splice(index, 1);
 			} else if (
 				!actions
 					?.map((a) => a.id)

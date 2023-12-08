@@ -1,4 +1,5 @@
 import { ActionFunctionArgs } from "@vercel/remix";
+import { format } from "date-fns";
 import { PRIORITY_MEDIUM } from "~/lib/constants";
 import createServerClient from "~/lib/supabase";
 
@@ -35,6 +36,29 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 			.update({ ...values })
 			.eq("id", id);
 		return { data };
+	} else if (action === "action-duplicate") {
+		const { data: oldAction } = await supabase
+			.from("actions")
+			.select("*")
+			.eq("id", id)
+			.single();
+		if (oldAction) {
+			const newId = values["newId"].toString();
+			const created_at = values["created_at"].toString();
+			const updated_at = values["updated_at"].toString();
+			const { data: newAction, error } = await supabase
+				.from("actions")
+				.insert({
+					...oldAction,
+					id: newId,
+					created_at,
+					updated_at,
+				})
+				.select()
+				.single();
+
+			return { newAction, error };
+		}
 	} else if (action === "action-delete") {
 		const data = await supabase.from("actions").delete().eq("id", id);
 

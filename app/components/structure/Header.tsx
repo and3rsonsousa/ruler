@@ -7,7 +7,7 @@ import {
 	useOutletContext,
 } from "@remix-run/react";
 import { ChevronDownIcon } from "lucide-react";
-import { Avatar, AvatarFallback } from "../ui/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/ui/avatar";
 import { Button } from "../ui/ui/button";
 import {
 	DropdownMenu,
@@ -25,7 +25,7 @@ export default function Header() {
 	const matches = useMatches();
 	const navigation = useNavigation();
 
-	const { clients } = matches[1].data as DashboardDataType;
+	const { clients, user } = matches[1].data as DashboardDataType;
 	const { client } = matches[1].params;
 
 	const fetchers = useFetchers();
@@ -76,8 +76,13 @@ export default function Header() {
 				</DropdownMenu>
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
-						<Avatar className="cursor-pointer">
-							<AvatarFallback>AS</AvatarFallback>
+						<Avatar className="cursor-pointer h-8 w-8">
+							<AvatarImage src={user.image} />
+							<AvatarFallback>
+								{user.name
+									.split(" ")[0][0]
+									.concat(user.name.split(" ")[1][0])}
+							</AvatarFallback>
 						</Avatar>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent className="bg-content">

@@ -45,21 +45,23 @@ export default function ClientPage() {
 						/>
 					</div>
 					{getLateActions(optimisticActions)?.length ? (
-						<div className="max-h-[50%] flex flex-col overflow-hidden space-y-1">
+						<div className="flex-shrink-0 max-h-[50%] flex flex-col overflow-hidden space-y-1">
 							<MicroHeader>Atrasados</MicroHeader>
 							<ListOfActions
 								actions={getLateActions(optimisticActions)}
 								categories={categories}
 								states={states}
+								showCategory={true}
 							/>
 						</div>
 					) : null}
-					<div className="flex flex-col space-y-1 overflow-hidden">
+					<div className="flex flex-grow flex-col space-y-1 overflow-hidden">
 						<MicroHeader>Próximas Ações</MicroHeader>
 						<ListOfActions
 							actions={getNotFinishedActions(optimisticActions)}
 							categories={categories}
 							states={states}
+							showCategory={true}
 						/>
 					</div>
 				</div>

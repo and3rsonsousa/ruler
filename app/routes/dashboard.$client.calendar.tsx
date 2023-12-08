@@ -13,6 +13,7 @@ import {
 } from "date-fns";
 import { pt, ptBR } from "date-fns/locale";
 import { ListOfActions } from "~/components/structure/Action";
+import CreateAction from "~/components/structure/CreateAction";
 
 export const meta: MetaFunction = ({ matches }) => {
 	const { client } = matches[2].data as DashboardClientType;
@@ -69,7 +70,7 @@ export default function ClientCalendar() {
 						}`}
 					>
 						<div
-							className={`md:text-sm flex items-center ${
+							className={`md:text-sm flex justify-between items-center ${
 								!isSameMonth(day.date, new Date())
 									? "md:opacity-50"
 									: ""
@@ -95,6 +96,7 @@ export default function ClientCalendar() {
 									{ locale: ptBR }
 								)}
 							</span>
+							<CreateAction date={day.date} />
 						</div>
 						<div>
 							<ListOfActions

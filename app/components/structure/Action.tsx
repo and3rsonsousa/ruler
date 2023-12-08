@@ -24,12 +24,14 @@ export function ActionLine({
 	states,
 	hasShortDate,
 	hideDate,
+	showCategory,
 }: {
 	action: Action;
 	categories: Category[];
 	states: State[];
 	hasShortDate?: boolean;
 	hideDate?: boolean;
+	showCategory?: boolean;
 }) {
 	const [edit, setEdit] = useState(false);
 	const [isHover, setHover] = useState(false);
@@ -51,11 +53,11 @@ export function ActionLine({
 			<ContextMenuTrigger>
 				<div
 					title={action.title}
-					className={`py-1 px-2 @[180px]:px-4 text-xs text-gray-400 font-medium border-l-4 rounded transition select-none ${
+					className={`py-1 px-2 w-full @[180px]:px-4 text-xs text-gray-400 font-medium border-l-4 rounded transition select-none bg-gray-900 flex gap-2 justify-between items-center ${
 						edit
 							? "bg-gray-700"
 							: "hover:bg-gray-800 hover:text-gray-200"
-					} bg-gray-900 flex gap-2 justify-between items-center border-${
+					} border-${
 						states.find(
 							(state) => state.id === Number(action.state_id)
 						)?.slug
@@ -74,57 +76,42 @@ export function ActionLine({
 							handleActions={handleActions}
 						/>
 					) : null}
-					<div className="line-clamp-1">
-						{edit ? (
-							<input
-								type="text"
-								defaultValue={action.title}
-								className="bg-transparent outline-none"
-								onBlur={(e) => {
-									setEdit(() => false);
-									handleActions({
-										action: "action-update",
-										id: action.id,
-										title: e.target.value,
-									});
-								}}
+					<div className="flex items-center gap-2">
+						{showCategory && (
+							<CategoryIcons
+								id={
+									categories.find(
+										(category) =>
+											category.id === action.category_id
+									)?.slug
+								}
+								className="w-3 h-3 opacity-50"
 							/>
-						) : (
-							action.title
 						)}
+						<div className="line-clamp-1">
+							{edit ? (
+								<input
+									type="text"
+									defaultValue={action.title}
+									className="bg-transparent outline-none"
+									onBlur={(e) => {
+										setEdit(() => false);
+										handleActions({
+											action: "action-update",
+											id: action.id,
+											title: e.target.value,
+										});
+									}}
+								/>
+							) : (
+								action.title
+							)}
+						</div>
 					</div>
 
 					{!hideDate && (
 						<div className="text-gray-400 text-xs tabular-nums text-right whitespace-nowrap">
-							{hasShortDate
-								? format(
-										parseISO(action.date),
-										`d/M${
-											!isSameYear(
-												parseISO(
-													action.date
-												).getFullYear(),
-												new Date().getUTCFullYear()
-											)
-												? "/yy"
-												: ""
-										}`,
-										{ locale: ptBR }
-								  )
-								: format(
-										parseISO(action.date),
-										`d 'de' MMM${
-											!isSameYear(
-												parseISO(
-													action.date
-												).getFullYear(),
-												new Date().getUTCFullYear()
-											)
-												? " 'de' y"
-												: ""
-										}`,
-										{ locale: ptBR }
-								  )}
+							{formatActionDatetime(action.date, hasShortDate)}
 						</div>
 					)}
 				</div>
@@ -151,7 +138,6 @@ export function ActionBlock({
 	client?: Client;
 }) {
 	const submit = useSubmit();
-	// const navigate = useNavigate();
 	const [isHover, setHover] = useState(false);
 
 	const handleActions = (data: { [key: string]: string | number }) => {
@@ -191,57 +177,38 @@ export function ActionBlock({
 						{action.title}
 					</div>
 					<div className="flex text-gray-400 items-center justify-between">
-						{client ? (
-							<Avatar className="w-5 h-5">
-								<AvatarFallback
-									style={{
-										backgroundColor:
-											client.bgColor || "#999",
-										color: client.fgColor || "#333",
-									}}
-								>
-									<ShortText
-										text={client.short}
-										className="scale-[0.6]"
-									/>
-								</AvatarFallback>
-							</Avatar>
-						) : // <div className="text-[10px] font-bold line-clamp-1 uppercase">
-						// 	{client?.short}
-						// </div>
-						null}
-						<div className=" tracking-widest uppercase ">
-							{/* {
-								categories.find(
-									(category) =>
-										category.id ===
-										Number(action.category_id)
-								)?.title
-							} */}
-							<CategoryIcons
-								id={
-									categories.find(
-										(category) =>
-											category.id ===
-											Number(action.category_id)
-									)?.slug
-								}
-								className="w-4"
-							/>
+						<div className="flex gap-2 items-center">
+							{client ? (
+								<Avatar className="w-5 h-5">
+									<AvatarFallback
+										style={{
+											backgroundColor:
+												client.bgColor || "#999",
+											color: client.fgColor || "#333",
+										}}
+									>
+										<ShortText
+											text={client.short}
+											className="scale-[0.6]"
+										/>
+									</AvatarFallback>
+								</Avatar>
+							) : null}
+							<div className=" tracking-widest uppercase ">
+								<CategoryIcons
+									id={
+										categories.find(
+											(category) =>
+												category.id ===
+												Number(action.category_id)
+										)?.slug
+									}
+									className="w-4"
+								/>
+							</div>
 						</div>
-						<div className=" text-xs tabular-nums text-right whitespace-nowrap">
-							{format(
-								parseISO(action.date),
-								`d 'de' MMM${
-									!isSameYear(
-										parseISO(action.date).getFullYear(),
-										new Date().getUTCFullYear()
-									)
-										? " 'de' y"
-										: ""
-								} '-' H'h'm`,
-								{ locale: ptBR }
-							)}
+						<div className="text-xs tabular-nums text-right whitespace-nowrap">
+							{formatActionDatetime(action.date, false, true)}
 						</div>
 					</div>
 				</div>
@@ -299,7 +266,7 @@ export function ActionGrid({
 					) : null}
 					<div></div>
 					<div
-						className={`font-medium line-clamp-3 text-center  ${
+						className={`font-medium line-clamp-3 text-center ${
 							action.title.length > 30
 								? "text-sm leading-tight"
 								: action.title.length > 18
@@ -343,16 +310,18 @@ export function ListOfActions({
 	states,
 	hideDate,
 	hasShortDate,
+	showCategory,
 }: {
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
 	hideDate?: boolean;
 	hasShortDate?: boolean;
+	showCategory?: boolean;
 }) {
 	return (
 		<div className="scrollbars">
-			<div className="h-full flex flex-col gap-1 @container">
+			<div className="min-h-full gap-1 flex flex-col @container">
 				{actions?.map((action) => (
 					<ActionLine
 						action={action}
@@ -361,6 +330,7 @@ export function ListOfActions({
 						key={action.id}
 						hideDate={hideDate}
 						hasShortDate={hasShortDate}
+						showCategory={showCategory}
 					/>
 				))}
 			</div>
@@ -472,7 +442,19 @@ function ShortcutActions({
 				navigate(`/dashboard/action/${action.id}`);
 			}
 			if (key === "d") {
-				handleActions({ id: action.id, action: "action-duplicate" });
+				handleActions({
+					id: action.id,
+					newId: window.crypto.randomUUID(),
+					created_at: format(
+						new Date(),
+						"yyyy-MM-dd'T'hh:mm:ss'+03:00:00'"
+					),
+					updated_at: format(
+						new Date(),
+						"yyyy-MM-dd'T'hh:mm:ss'+03:00:00'"
+					),
+					action: "action-duplicate",
+				});
 			}
 
 			if (key === "x") {
@@ -579,6 +561,7 @@ function ContextMenuItems({
 									handleActions({
 										id: action.id,
 										category_id: category.id,
+										action: "action-update",
 									});
 								}}
 							>
@@ -630,4 +613,36 @@ function ContextMenuItems({
 			</ContextMenuSub>
 		</ContextMenuContent>
 	);
+}
+
+export function formatActionDatetime(
+	date: Date | string,
+	hasShortDate?: boolean,
+	hasTime?: boolean
+) {
+	date = typeof date === "string" ? parseISO(date) : date;
+
+	return hasShortDate
+		? format(
+				date,
+				`d/M${
+					!isSameYear(date.getFullYear(), new Date().getUTCFullYear())
+						? "/yy"
+						: ""
+				}`,
+				{ locale: ptBR }
+		  )
+		: format(
+				date,
+				`d 'de' MMM${
+					!isSameYear(date.getFullYear(), new Date().getUTCFullYear())
+						? " 'de' y"
+						: ""
+				}`.concat(
+					hasTime
+						? ` 'às' H'h'${!(date.getMinutes() === 0) ? "m" : ""}`
+						: ""
+				),
+				{ locale: ptBR }
+		  );
 }

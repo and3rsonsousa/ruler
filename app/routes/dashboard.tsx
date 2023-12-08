@@ -30,7 +30,19 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		supabase.from("states").select("*").order("order", { ascending: true }),
 	]);
 
-	return { clients, people, categories, states, session, headers };
+	const user = people?.find(
+		(person) => person.user_id === session.user.id
+	) as Person;
+
+	return {
+		clients,
+		people,
+		categories,
+		user,
+		states,
+		session,
+		headers,
+	} as DashboardDataType;
 }
 
 export default function Dashboard() {

@@ -1,5 +1,5 @@
 import { PopoverTrigger } from "@radix-ui/react-popover";
-import { Form, useMatches, useSubmit } from "@remix-run/react";
+import { Form, useMatches, useParams, useSubmit } from "@remix-run/react";
 import { addHours, format } from "date-fns";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
@@ -27,7 +27,8 @@ import { useToast } from "../ui/ui/use-toast";
 export default function CreateAction({ date }: { date?: Date }) {
 	const { categories, states, clients, people, session } = useMatches()[1]
 		.data as DashboardDataType;
-	const [open, setOpen] = useState(true);
+	let client = (useMatches()[2].data as DashboardClientType).client;
+	const [open, setOpen] = useState(false);
 	const submit = useSubmit();
 	const { toast } = useToast();
 
@@ -36,6 +37,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 
 	const cleanAction = {
 		category_id: 1,
+		client_id: client ? client.id : undefined,
 		date: date,
 		description: "",
 		responsibles: [session.user.id],
@@ -46,9 +48,6 @@ export default function CreateAction({ date }: { date?: Date }) {
 
 	const [action, setAction] = useState<RawAction>(cleanAction);
 
-	const client = clients.find(
-		(client) => client.id === action.client_id
-	) as Client;
 	const category = categories.find(
 		(category) => category.id === action.category_id
 	) as Category;
@@ -63,13 +62,23 @@ export default function CreateAction({ date }: { date?: Date }) {
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
 			<PopoverTrigger asChild>
-				<Button
-					variant="default"
-					size="icon"
-					className="fixed bottom-2 right-2 rounded-full"
-				>
-					<PlusIcon className="w-8" />
-				</Button>
+				{date ? (
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-5 w-5 grid place-content-center p-0"
+					>
+						<PlusIcon className="w-3 h-3" />
+					</Button>
+				) : (
+					<Button
+						variant="default"
+						size="icon"
+						className="fixed bottom-2 right-2 rounded-full"
+					>
+						<PlusIcon className="w-8" />
+					</Button>
+				)}
 			</PopoverTrigger>
 			<PopoverContent className="bg-content md:px-6 w-[90dvw] mr-[5dvw] sm:w-auto">
 				{/* <pre className="text-xs">
@@ -125,7 +134,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 									action.client_id ? "p-1 -ml-1" : "px-2 py-1"
 								}`}
 							>
-								{action.client_id !== undefined ? (
+								{client !== undefined ? (
 									<Avatar className="scale-75">
 										<AvatarFallback
 											style={{
@@ -313,7 +322,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 													? " 'de' y"
 													: ""
 											)
-											.concat(" 'às' h'h'")
+											.concat(" 'às' H'h'")
 											.concat(
 												action.date.getMinutes() !== 0
 													? "m"

@@ -20,6 +20,7 @@ declare global {
 		categories: Category[];
 		states: State[];
 		session: Session;
+		user: Person;
 	};
 
 	type DashboardClientType = {

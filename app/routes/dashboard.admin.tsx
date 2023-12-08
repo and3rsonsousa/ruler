@@ -17,7 +17,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			.single();
 
 		if (user?.admin) {
-			return { data: "OK" };
+			return { user };
 		}
 		return redirect("/dashboard");
 	}
