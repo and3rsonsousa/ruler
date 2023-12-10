@@ -27,6 +27,7 @@ import { ScrollArea } from "~/components/ui/ui/scroll-area";
 import { Toggle } from "~/components/ui/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "~/components/ui/ui/toggle-group";
 import {
+	AvatarClient,
 	Icons,
 	ShortText,
 	getLateActions,
@@ -210,7 +211,9 @@ export default function DashboardIndex() {
 							key={client.id}
 						>
 							{({ isTransitioning }) => (
-								<Avatar
+								<AvatarClient
+									size="lg"
+									client={client}
 									key={client.id}
 									style={
 										isTransitioning
@@ -220,19 +223,7 @@ export default function DashboardIndex() {
 											  }
 											: undefined
 									}
-								>
-									<AvatarFallback
-										style={{
-											backgroundColor:
-												client.bgColor || "bg-muted",
-											color:
-												client.fgColor ||
-												"text-gray-300",
-										}}
-									>
-										{ShortText({ text: client.short })}
-									</AvatarFallback>
-								</Avatar>
+								/>
 							)}
 						</NavLink>
 					))}
@@ -342,6 +333,7 @@ export default function DashboardIndex() {
 								<DropdownMenuContent className="bg-content">
 									{categories.map((category) => (
 										<DropdownMenuItem
+											key={category.id}
 											className="bg-item flex gap-2 items-center"
 											onSelect={() =>
 												setCategory(category)

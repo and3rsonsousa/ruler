@@ -31,10 +31,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 		return { data, error };
 	} else if (action === "action-update") {
-		const data = await supabase
+		const { data, error } = await supabase
 			.from("actions")
 			.update({ ...values })
 			.eq("id", id);
+
+		console.log({ data, error });
 		return { data };
 	} else if (action === "action-duplicate") {
 		const { data: oldAction } = await supabase

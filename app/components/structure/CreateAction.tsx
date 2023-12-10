@@ -2,7 +2,7 @@ import { PopoverTrigger } from "@radix-ui/react-popover";
 import { Form, useMatches, useParams, useSubmit } from "@remix-run/react";
 import { addHours, format } from "date-fns";
 import { PlusIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/ui/button";
 import { Popover, PopoverContent } from "../ui/ui/popover";
 import {
@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "../ui/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/ui/avatar";
-import { Icons, ShortText } from "~/lib/helpers";
+import { AvatarClient, Icons, ShortText } from "~/lib/helpers";
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -80,10 +80,10 @@ export default function CreateAction({ date }: { date?: Date }) {
 					</Button>
 				)}
 			</PopoverTrigger>
-			<PopoverContent className="bg-content md:px-6 w-[90dvw] mr-[5dvw] sm:w-auto">
-				{/* <pre className="text-xs">
-					{JSON.stringify(action, undefined, 2)}
-				</pre> */}
+			<PopoverContent className="bg-content md:px-6 w-[90dvw] mr-[5dvw] sm:max-w-md">
+				<pre className="text-xs">
+					{JSON.stringify(client, undefined, 2)}
+				</pre>
 
 				{/* Título */}
 				<div
@@ -97,9 +97,9 @@ export default function CreateAction({ date }: { date?: Date }) {
 					}
 					placeholder="Título"
 					contentEditable="true"
-				>
-					{action.title}
-				</div>
+					// suppressContentEditableWarning={true}
+					dangerouslySetInnerHTML={{ __html: action.title }}
+				></div>
 				{/* Descrição */}
 				<div
 					tabIndex={2}
@@ -112,45 +112,38 @@ export default function CreateAction({ date }: { date?: Date }) {
 						})
 					}
 					placeholder="Descrição da ação"
-				>
-					{action.description}
-				</div>
-				<hr className="border-gray-300/20 my-4 -mx-4" />
+					dangerouslySetInnerHTML={{ __html: action.description }}
+				></div>
+				<hr className="border-gray-300/20 mt-2 mb-4 -mx-4 md:-mx-6" />
 				<div className="flex justify-center flex-wrap md:flex-nowrap md:justify-between gap-2">
 					<div className="flex items-center justify-between gap-1 w-full">
 						{/* Clientes */}
+						{JSON.stringify(client)}
 						<Select
 							value={action.client_id?.toString()}
-							onValueChange={(value) =>
+							onValueChange={(value) => {
 								setAction({
 									...action,
 									client_id: Number(value),
-								})
-							}
+								});
+							}}
 						>
 							<SelectTrigger
 								tabIndex={3}
-								className={`bg-transparent border-none ${
+								className={`bg-transparent border-none focus:ring-offset-0 ${
 									action.client_id ? "p-1 -ml-1" : "px-2 py-1"
 								}`}
 							>
-								{client !== undefined ? (
-									<Avatar className="scale-75">
-										<AvatarFallback
-											style={{
-												backgroundColor:
-													client.bgColor ||
-													"bg-muted",
-												color:
-													client.fgColor ||
-													"text-gray-300",
-											}}
-										>
-											{ShortText({
-												text: client.short,
-											})}
-										</AvatarFallback>
-									</Avatar>
+								{action.client_id ? (
+									<AvatarClient
+										client={
+											clients.find(
+												(client) =>
+													client.id ===
+													action.client_id
+											) as Client
+										}
+									/>
 								) : (
 									"Cliente"
 								)}
@@ -179,7 +172,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 						>
 							<SelectTrigger
 								tabIndex={4}
-								className={`bg-transparent border-none`}
+								className={`bg-transparent border-none focus:ring-offset-0`}
 							>
 								<Icons id={category.slug} className="w-4" />
 							</SelectTrigger>
@@ -213,7 +206,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 						>
 							<SelectTrigger
 								tabIndex={5}
-								className={`bg-transparent border-none`}
+								className={`bg-transparent border-none focus:ring-offset-0`}
 							>
 								<div
 									className={`rounded-full w-4 h-4 border-4 border-${state.slug}`}
@@ -237,12 +230,16 @@ export default function CreateAction({ date }: { date?: Date }) {
 						</Select>
 						{/* Responsáveis */}
 						<DropdownMenu>
-							<DropdownMenuTrigger asChild tabIndex={6}>
+							<DropdownMenuTrigger
+								asChild
+								tabIndex={6}
+								className="focus:ring-primary border-none outline-none focus:ring-offset-0 focus:ring-2 p-2 rounded-lg"
+							>
 								<div className="flex pl-2">
 									{responsibles.map((person) => (
 										<Avatar
 											key={person.id}
-											className="w-6 h-6 -ml-1 border-2 border-background"
+											className="w-6 h-6 -ml-1 border-l-2 border-background"
 										>
 											<AvatarImage src={person.image} />
 										</Avatar>
@@ -257,9 +254,9 @@ export default function CreateAction({ date }: { date?: Date }) {
 										checked={action.responsibles.includes(
 											person.user_id
 										)}
-										onCheckedChange={(v) => {
+										onCheckedChange={(checked) => {
 											if (
-												!v &&
+												!checked &&
 												action.responsibles.length < 2
 											) {
 												alert(
@@ -267,7 +264,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 												);
 												return false;
 											}
-											let tempResponsibles = v
+											let tempResponsibles = checked
 												? [
 														...action.responsibles,
 														person.user_id,
@@ -303,12 +300,13 @@ export default function CreateAction({ date }: { date?: Date }) {
 						</DropdownMenu>
 					</div>
 					<div className="flex justify-between w-full items-center gap-2">
+						{/* Data e Hora */}
 						<Popover>
 							<PopoverTrigger asChild tabIndex={7}>
 								<Button
 									variant="ghost"
 									size="sm"
-									className="font-light text-xs"
+									className="font-normal text-xs focus-visible:ring-offset-0"
 								>
 									{format(
 										action.date,
@@ -446,6 +444,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 										}
 									);
 									setAction(cleanAction);
+									setOpen(false);
 								}
 							}}
 						>

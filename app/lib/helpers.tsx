@@ -1,5 +1,23 @@
 import { isAfter, isBefore, isToday, parseISO } from "date-fns";
 import {
+	CircleDashedIcon,
+	Code2Icon,
+	DollarSignIcon,
+	ImageIcon,
+	ListChecksIcon,
+	LucideIcon,
+	MegaphoneIcon,
+	PenToolIcon,
+	PlayIcon,
+	PrinterIcon,
+	SignalIcon,
+	SignalLowIcon,
+	SignalMediumIcon,
+	UsersIcon,
+	XIcon,
+} from "lucide-react";
+import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
+import {
 	FINISHED_ID,
 	POST_ID,
 	PRIORITY_HIGH,
@@ -7,23 +25,6 @@ import {
 	PRIORITY_MEDIUM,
 	VIDEO_ID,
 } from "./constants";
-import {
-	LucideIcon,
-	ImageIcon,
-	PlayIcon,
-	CircleDashedIcon,
-	ListChecksIcon,
-	DollarSignIcon,
-	PrinterIcon,
-	UsersIcon,
-	Code2Icon,
-	PenToolIcon,
-	MegaphoneIcon,
-	SignalLowIcon,
-	SignalMediumIcon,
-	SignalIcon,
-	XIcon,
-} from "lucide-react";
 import { cn } from "./util";
 
 export function ShortText({
@@ -37,24 +38,65 @@ export function ShortText({
 	return (
 		<div
 			className={cn(
-				`font-bold tracking-widest uppercase text-center leading-none`,
+				`font-bold tracking-wide uppercase text-center leading-none`,
 				className
 			)}
 		>
 			{length > 4 ? (
-				<div className=" scale-[0.65]">
+				<div className="scale-[0.65]">
 					<div> {text.substring(0, Math.ceil(length / 2))} </div>
 					<div> {text.substring(Math.ceil(length / 2))} </div>
 				</div>
 			) : length === 4 ? (
-				<div className=" scale-[0.75]">
+				<div className="scale-[0.75]">
 					<div> {text.substring(0, Math.ceil(length / 2))} </div>
 					<div> {text.substring(Math.ceil(length / 2))} </div>
 				</div>
 			) : (
-				<div className=" scale-[0.75]">{text}</div>
+				<div className="scale-[0.75]">{text}</div>
 			)}
 		</div>
+	);
+}
+
+export function AvatarClient({
+	client,
+	size = "sm",
+	style,
+}: {
+	client: Client;
+	size?: "sm" | "md" | "lg";
+	style?: Object;
+}) {
+	return (
+		<Avatar
+			className={
+				size === "sm"
+					? "w-6 h-6"
+					: size === "md"
+					? "w-8 h-8"
+					: "w-12 h-12"
+			}
+			style={style}
+		>
+			<AvatarFallback
+				style={{
+					backgroundColor: client.bgColor || "#999",
+					color: client.fgColor || "#333",
+				}}
+			>
+				<ShortText
+					text={client.short}
+					className={
+						size === "sm"
+							? "scale-[0.7]"
+							: size === "md"
+							? "scale-[0.8]"
+							: "scale-[1.3]"
+					}
+				/>
+			</AvatarFallback>
+		</Avatar>
 	);
 }
 

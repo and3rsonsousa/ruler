@@ -18,7 +18,7 @@ export interface Database {
           description: string | null
           id: string
           priority_id: string
-          responsibles: string[] | null
+          responsibles: string[]
           state_id: number
           title: string
           updated_at: string
@@ -28,11 +28,11 @@ export interface Database {
           category_id: number
           client_id: number
           created_at?: string
-          date?: string
+          date: string
           description?: string | null
           id?: string
           priority_id: string
-          responsibles?: string[] | null
+          responsibles: string[]
           state_id: number
           title: string
           updated_at?: string
@@ -46,7 +46,7 @@ export interface Database {
           description?: string | null
           id?: string
           priority_id?: string
-          responsibles?: string[] | null
+          responsibles?: string[]
           state_id?: number
           title?: string
           updated_at?: string
@@ -332,7 +332,7 @@ export interface Database {
           description: string | null
           id: string
           priority_id: string
-          responsibles: string[] | null
+          responsibles: string[]
           state_id: number
           title: string
           updated_at: string

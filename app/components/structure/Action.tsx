@@ -10,7 +10,7 @@ import ptBR from "date-fns/locale/pt-BR";
 import { CopyIcon, PencilLineIcon, TimerIcon, TrashIcon } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { FINISHED_ID, PRIORITY_HIGH } from "~/lib/constants";
-import { Icons, ShortText } from "~/lib/helpers";
+import { AvatarClient, Icons, ShortText } from "~/lib/helpers";
 import { Avatar, AvatarFallback } from "../ui/ui/avatar";
 import {
 	ContextMenu,
@@ -62,10 +62,10 @@ export function ActionLine({
 			<ContextMenuTrigger>
 				<div
 					title={action.title}
-					className={`py-1 px-2 w-full @[180px]:px-4 text-xs font-medium border-l-4 rounded transition select-none bg-gray-900 flex gap-2 justify-between items-center ${
+					className={`py-1 px-2 w-full overflow-hidden @[180px]:px-4 text-xs font-medium border-l-4 rounded transition select-none  flex gap-2 justify-between items-center ${
 						edit
 							? "bg-gray-700"
-							: "hover:bg-gray-800 hover:text-gray-200"
+							: "bg-gray-900 hover:bg-gray-800 hover:text-gray-200"
 					} border-${
 						states.find(
 							(state) => state.id === Number(action.state_id)
@@ -85,7 +85,7 @@ export function ActionLine({
 							handleActions={handleActions}
 						/>
 					) : null}
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-2 grow shrink-0">
 						{showCategory && (
 							<Icons
 								id={
@@ -97,29 +97,36 @@ export function ActionLine({
 								className="w-3 h-3 opacity-50"
 							/>
 						)}
-						<div className="line-clamp-1 text-gray-300">
-							{edit ? (
-								<input
-									type="text"
-									defaultValue={action.title}
-									className="bg-transparent outline-none"
-									onBlur={(e) => {
-										setEdit(() => false);
+						<div className="relative w-full">
+							<input
+								type="text"
+								defaultValue={action.title}
+								className={`bg-transparent w-full outline-none ${
+									!edit ? "opacity-0" : "opacity-100"
+								}`}
+								onBlur={(e) => {
+									if (e.target.value !== action.title)
 										handleActions({
 											action: "action-update",
 											id: action.id,
 											title: e.target.value,
 										});
-									}}
-								/>
-							) : (
-								action.title
-							)}
+
+									setEdit(() => false);
+								}}
+							/>
+							<span
+								className={`absolute pointer-events-none top-0 left-0 line-clamp-1 ${
+									edit ? "opacity-0 " : "opacity-100"
+								}`}
+							>
+								{action.title}
+							</span>
 						</div>
 					</div>
 
 					{!hideDate && (
-						<div className="text-gray-500 text-xs tabular-nums text-right whitespace-nowrap">
+						<div className="text-gray-500 grow-0 shrink text-xs tabular-nums text-right whitespace-nowrap">
 							{formatActionDatetime({
 								date: action.date,
 								isDistance: true,
@@ -153,6 +160,7 @@ export function ActionBlock({
 	client?: Client;
 }) {
 	const submit = useSubmit();
+	const [edit, setEdit] = useState(false);
 	const [isHover, setHover] = useState(false);
 
 	const handleActions = (data: { [key: string]: string | number }) => {
@@ -170,10 +178,15 @@ export function ActionBlock({
 		<ContextMenu>
 			<ContextMenuTrigger>
 				<div
-					className={`bg-gray-900 hover:bg-gray-800 py-2 px-4 text-sm border-l-4 rounded flex flex-col justify-between gap-2 transition border-${
+					title={action.title}
+					className={`py-2 px-4 text-sm border-l-4 rounded flex flex-col justify-between gap-2 transition overflow-hidden border-${
 						states.find(
 							(state) => state.id === Number(action.state_id)
 						)?.slug
+					} ${
+						edit
+							? "bg-gray-700 text-gray-100"
+							: "bg-gray-900 hover:bg-gray-800 hover:text-gray-200"
 					}`}
 					onMouseEnter={(e) => {
 						setHover(true);
@@ -181,6 +194,7 @@ export function ActionBlock({
 					onMouseLeave={(e) => {
 						setHover(false);
 					}}
+					onClick={() => setEdit(true)}
 				>
 					{isHover ? (
 						<ShortcutActions
@@ -189,28 +203,36 @@ export function ActionBlock({
 						/>
 					) : null}
 					{/* Title */}
-					<div className="line-clamp-1 leading-tight text-lg font-medium">
-						{action.title}
+					<div className="relative leading-tight text-lg font-medium">
+						<input
+							type="text"
+							defaultValue={action.title}
+							className={`bg-transparent outline-none ${
+								!edit ? "opacity-0" : "opacity-100"
+							}`}
+							onBlur={(e) => {
+								if (e.target.value !== action.title)
+									handleActions({
+										action: "action-update",
+										id: action.id,
+										title: e.target.value,
+									});
+
+								setEdit(() => false);
+							}}
+						/>
+						<span
+							className={`absolute pointer-events-none top-0 left-0 line-clamp-1 ${
+								edit ? "opacity-0 " : "opacity-100"
+							}`}
+						>
+							{action.title}
+						</span>
 					</div>
 					<div className="flex text-gray-400 items-center justify-between">
 						<div className="flex gap-2 items-center">
 							{/* Cliente */}
-							{client ? (
-								<Avatar className="w-5 h-5">
-									<AvatarFallback
-										style={{
-											backgroundColor:
-												client.bgColor || "#999",
-											color: client.fgColor || "#333",
-										}}
-									>
-										<ShortText
-											text={client.short}
-											className="scale-[0.6]"
-										/>
-									</AvatarFallback>
-								</Avatar>
-							) : null}
+							{client ? <AvatarClient client={client} /> : null}
 							<div>
 								<Icons
 									id={
