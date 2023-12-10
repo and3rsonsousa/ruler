@@ -15,13 +15,24 @@ import {
 import { useState } from "react";
 import { ActionBlock, ActionLine } from "~/components/structure/Action";
 import { Avatar, AvatarFallback } from "~/components/ui/ui/avatar";
+import { Button } from "~/components/ui/ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "~/components/ui/ui/dropdown-menu";
+
 import { ScrollArea } from "~/components/ui/ui/scroll-area";
 import { Toggle } from "~/components/ui/ui/toggle";
+import { ToggleGroup, ToggleGroupItem } from "~/components/ui/ui/toggle-group";
 import {
+	Icons,
 	ShortText,
 	getLateActions,
 	getNotFinishedActions,
 	getTodayActions,
+	getUrgentActions,
 } from "~/lib/helpers";
 import createServerClient from "~/lib/supabase";
 
@@ -48,8 +59,10 @@ export default function DashboardIndex() {
 	let { actions } = useLoaderData<typeof loader>();
 	const fetchers = useFetchers();
 	const [allActions, setAllActions] = useState(false);
+	const [priority, setPriority] = useState<string>();
+	const [category, setCategory] = useState<Category>();
 
-	const { categories, people, states, clients } = useMatches()[1]
+	const { categories, people, states, priorities, clients } = useMatches()[1]
 		.data as DashboardDataType;
 
 	let optimisticActions = fetchers.reduce<{ [k: string]: any }>((memo, f) => {
@@ -114,8 +127,9 @@ export default function DashboardIndex() {
 	);
 
 	return (
-		<ScrollArea className="h-full">
+		<ScrollArea className="h-full px-4 sm:px-8">
 			<div className="py-8 flex flex-col gap-8">
+				{/* Dashboard dada */}
 				<div className="grid grid-cols-2 md:grid-cols-4 gap-2">
 					{[
 						{
@@ -145,7 +159,7 @@ export default function DashboardIndex() {
 						{
 							id: 4,
 							title: "em Atraso",
-							data: getLateActions(actions)?.length,
+							data: getLateActions({ actions })?.length,
 							icon: (
 								<MoonStarIcon className="w-8 text-gray-400" />
 							),
@@ -161,6 +175,28 @@ export default function DashboardIndex() {
 							</span>
 						</div>
 					))}
+				</div>
+				{/* Urgente */}
+				<div className="border-red-500 border-2 p-4 rounded-xl">
+					<div className="flex justify-between items-center">
+						<h1 className="mb-4 text-2xl font-semibold tracking-tight text-red-500">
+							Urgente
+						</h1>
+					</div>
+					<div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
+						{getUrgentActions(actions)?.map((action) => (
+							<ActionBlock
+								key={action.id}
+								action={action}
+								states={states}
+								categories={categories}
+								priorities={priorities}
+								client={clients.find(
+									(client) => action.client_id === client.id
+								)}
+							/>
+						))}
+					</div>
 				</div>
 				{/* Clientes */}
 
@@ -231,6 +267,7 @@ export default function DashboardIndex() {
 								action={action}
 								states={states}
 								categories={categories}
+								priorities={priorities}
 								client={clients.find(
 									(client) => action.client_id === client.id
 								)}
@@ -240,16 +277,100 @@ export default function DashboardIndex() {
 				</div>
 				{/* Ações em atraso */}
 				<div>
-					<h1 className="mb-4 text-2xl font-semibold tracking-tight">
-						Ações em atraso
-					</h1>
-					<div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-4">
-						{getLateActions(actions)?.map((action) => (
+					<div className="flex justify-between items-center">
+						<h1 className="mb-4 text-2xl font-semibold tracking-tight">
+							Ações em atraso
+						</h1>
+						<div className="flex gap-4">
+							<ToggleGroup
+								type="single"
+								value={priority}
+								onValueChange={(value) => setPriority(value)}
+								className="flex gap-2 items-center text-right"
+							>
+								{[
+									{
+										value: "low",
+										text: "Baixa",
+									},
+									{
+										value: "mid",
+										text: "Média",
+									},
+									{
+										value: "high",
+										text: "Alta",
+									},
+								].map((item) => (
+									<ToggleGroupItem
+										asChild
+										value={item.value}
+										key={item.value}
+									>
+										<Button
+											size="icon"
+											variant={
+												priority === item.value
+													? "default"
+													: "ghost"
+											}
+											title={item.text}
+										>
+											<Icons
+												id={item.value}
+												type="priority"
+												className={`w-4 ${
+													priority !== item.value
+														? "text-gray-300"
+														: ""
+												}`}
+											/>
+										</Button>
+									</ToggleGroupItem>
+								))}
+							</ToggleGroup>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										size="sm"
+										variant={category ? "default" : "ghost"}
+									>
+										{category?.title ||
+											"Filtro por Categoria"}
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent className="bg-content">
+									{categories.map((category) => (
+										<DropdownMenuItem
+											className="bg-item flex gap-2 items-center"
+											onSelect={() =>
+												setCategory(category)
+											}
+										>
+											<Icons
+												id={category.slug}
+												className="w-3 h-3"
+											/>
+											{category.title}
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						</div>
+					</div>
+					<div className="grid gap-1 md:grid-cols-2 lg:grid-cols-3">
+						{getLateActions({
+							actions,
+							priority: priority
+								? (priority as PRIORITIES)
+								: undefined,
+						})?.map((action) => (
 							<ActionLine
 								key={action.id}
 								action={action}
 								states={states}
 								categories={categories}
+								priorities={priorities}
 							/>
 						))}
 					</div>
@@ -266,6 +387,7 @@ export default function DashboardIndex() {
 								action={action}
 								states={states}
 								categories={categories}
+								priorities={priorities}
 							/>
 						))}
 					</div>

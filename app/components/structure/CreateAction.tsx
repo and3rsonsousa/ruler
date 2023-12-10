@@ -13,7 +13,7 @@ import {
 	SelectValue,
 } from "../ui/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/ui/avatar";
-import { CategoryIcons, ShortText } from "~/lib/helpers";
+import { Icons, ShortText } from "~/lib/helpers";
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -32,13 +32,13 @@ export default function CreateAction({ date }: { date?: Date }) {
 	const submit = useSubmit();
 	const { toast } = useToast();
 
-	date = date || new Date();
-	date.setHours(11, 0);
+	let newDate = date || new Date();
+	newDate.setHours(11, 0);
 
 	const cleanAction = {
 		category_id: 1,
 		client_id: client ? client.id : undefined,
-		date: date,
+		date: newDate,
 		description: "",
 		responsibles: [session.user.id],
 		state_id: 1,
@@ -181,10 +181,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 								tabIndex={4}
 								className={`bg-transparent border-none`}
 							>
-								<CategoryIcons
-									id={category.slug}
-									className="w-4"
-								/>
+								<Icons id={category.slug} className="w-4" />
 							</SelectTrigger>
 							<SelectContent className="bg-content">
 								{categories.map((category) => (
@@ -194,7 +191,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 										className="bg-select-item"
 									>
 										<div className="flex gap-2 items-center">
-											<CategoryIcons
+											<Icons
 												id={category.slug}
 												className="w-4"
 											/>

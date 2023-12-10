@@ -12,6 +12,7 @@ declare global {
 	type People = Person[];
 	type Category = Database["public"]["Tables"]["categories"]["Row"];
 	type State = Database["public"]["Tables"]["states"]["Row"];
+	type Priority = Database["public"]["Tables"]["priority"]["Row"];
 	type Action = Database["public"]["Tables"]["actions"]["Row"];
 
 	type DashboardDataType = {
@@ -21,6 +22,7 @@ declare global {
 		states: State[];
 		session: Session;
 		user: Person;
+		priorities: Priority[];
 	};
 
 	type DashboardClientType = {
@@ -46,4 +48,6 @@ declare global {
 		user_id: string;
 		responsibles: string[];
 	};
+
+	type PRIORITIES = "low" | "mid" | "high";
 }

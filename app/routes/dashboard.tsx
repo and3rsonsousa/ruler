@@ -17,6 +17,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		{ data: people },
 		{ data: categories },
 		{ data: states },
+		{ data: priorities },
 	] = await Promise.all([
 		supabase
 			.from("clients")
@@ -28,6 +29,10 @@ export async function loader({ request }: LoaderFunctionArgs) {
 			.select("*")
 			.order("priority", { ascending: true }),
 		supabase.from("states").select("*").order("order", { ascending: true }),
+		supabase
+			.from("priority")
+			.select("*")
+			.order("order", { ascending: true }),
 	]);
 
 	const user = people?.find(
@@ -40,6 +45,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 		categories,
 		user,
 		states,
+		priorities,
 		session,
 		headers,
 	} as DashboardDataType;

@@ -151,11 +151,11 @@
 }
 
 .bg-item {
-	@apply text-xs px-4 py-2 font-light;
+	@apply text-xs px-4 py-1 font-light;
 }
 
 .bg-select-item {
-	@apply text-xs pr-4 pl-8 py-2 font-light;
+	@apply text-xs pr-4 pl-8 py-1 font-light;
 }
 
 .debug-1 {

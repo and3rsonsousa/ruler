@@ -44,11 +44,13 @@ export default function ClientPage() {
 							max={2}
 						/>
 					</div>
-					{getLateActions(optimisticActions)?.length ? (
+					{getLateActions({ actions: optimisticActions })?.length ? (
 						<div className="flex-shrink-0 max-h-[50%] flex flex-col overflow-hidden space-y-1">
 							<MicroHeader>Atrasados</MicroHeader>
 							<ListOfActions
-								actions={getLateActions(optimisticActions)}
+								actions={getLateActions({
+									actions: optimisticActions,
+								})}
 								categories={categories}
 								states={states}
 								showCategory={true}

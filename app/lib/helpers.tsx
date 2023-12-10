@@ -1,5 +1,12 @@
 import { isAfter, isBefore, isToday, parseISO } from "date-fns";
-import { FINISHED_ID, POST_ID, VIDEO_ID } from "./constants";
+import {
+	FINISHED_ID,
+	POST_ID,
+	PRIORITY_HIGH,
+	PRIORITY_LOW,
+	PRIORITY_MEDIUM,
+	VIDEO_ID,
+} from "./constants";
 import {
 	LucideIcon,
 	ImageIcon,
@@ -51,11 +58,24 @@ export function ShortText({
 	);
 }
 
-export function getLateActions(actions: Action[] | null) {
+export function getLateActions({
+	actions,
+	priority,
+}: {
+	actions: Action[] | null;
+	priority?: PRIORITIES;
+}) {
+	priority = priority
+		? ({ low: PRIORITY_LOW, mid: PRIORITY_MEDIUM, high: PRIORITY_HIGH }[
+				priority
+		  ] as PRIORITIES)
+		: undefined;
+
 	return actions?.filter(
 		(action) =>
 			isBefore(parseISO(action.date), new Date()) &&
-			action.state_id !== FINISHED_ID
+			action.state_id !== FINISHED_ID &&
+			(priority ? action.priority_id === priority : true)
 	);
 }
 
@@ -63,6 +83,14 @@ export function getNotFinishedActions(actions: Action[] | null) {
 	return actions?.filter(
 		(action) =>
 			isAfter(parseISO(action.date), new Date()) &&
+			action.state_id !== FINISHED_ID
+	);
+}
+
+export function getUrgentActions(actions: Action[] | null) {
+	return actions?.filter(
+		(action) =>
+			action.priority_id === PRIORITY_HIGH &&
 			action.state_id !== FINISHED_ID
 	);
 }
@@ -80,8 +108,7 @@ export function getInstagramActions(actions: Action[] | null) {
 		[POST_ID, VIDEO_ID].includes(Number(action.category_id))
 	);
 }
-
-const categoryIconsList: { [key: string]: LucideIcon } = {
+const iconsList: { [key: string]: LucideIcon } = {
 	post: ImageIcon,
 	video: PlayIcon,
 	stories: CircleDashedIcon,
@@ -92,37 +119,26 @@ const categoryIconsList: { [key: string]: LucideIcon } = {
 	dev: Code2Icon,
 	design: PenToolIcon,
 	ads: MegaphoneIcon,
-};
-
-const priorityIconsList: { [key: string]: LucideIcon } = {
 	low: SignalLowIcon,
 	mid: SignalMediumIcon,
 	high: SignalIcon,
 	base: SignalIcon,
 };
 
-export const CategoryIcons = ({
+export const Icons = ({
 	id,
 	className,
+	type = "category",
 }: {
 	id?: string;
 	className?: string;
+	type?: "category" | "priority";
 }) => {
-	const View = categoryIconsList[id as string] ?? XIcon;
+	const View = iconsList[id as string] ?? XIcon;
 
-	return <View className={cn(className)} />;
-};
-
-export const PriorityIcons = ({
-	id,
-	className,
-}: {
-	id?: string;
-	className?: string;
-}) => {
-	const View = priorityIconsList[id as string] ?? SignalIcon;
-
-	return (
+	return type === "category" ? (
+		<View className={cn(className)} />
+	) : (
 		<div className="relative">
 			<SignalIcon
 				className={cn([

@@ -1,13 +1,22 @@
 import { useNavigate, useSubmit } from "@remix-run/react";
-import { addHours, format, isSameYear, parseISO } from "date-fns";
+import {
+	addHours,
+	format,
+	formatDistanceToNow,
+	isSameYear,
+	parseISO,
+} from "date-fns";
 import ptBR from "date-fns/locale/pt-BR";
 import { CopyIcon, PencilLineIcon, TimerIcon, TrashIcon } from "lucide-react";
-import { useEffect, useState } from "react";
-import { FINISHED_ID } from "~/lib/constants";
+import { Fragment, useEffect, useState } from "react";
+import { FINISHED_ID, PRIORITY_HIGH } from "~/lib/constants";
+import { Icons, ShortText } from "~/lib/helpers";
+import { Avatar, AvatarFallback } from "../ui/ui/avatar";
 import {
 	ContextMenu,
 	ContextMenuContent,
 	ContextMenuItem,
+	ContextMenuLabel,
 	ContextMenuPortal,
 	ContextMenuSeparator,
 	ContextMenuSub,
@@ -15,13 +24,12 @@ import {
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
 } from "../ui/ui/context-menu";
-import { CategoryIcons, ShortText } from "~/lib/helpers";
-import { Avatar, AvatarFallback } from "../ui/ui/avatar";
 
 export function ActionLine({
 	action,
 	categories,
 	states,
+	priorities,
 	hasShortDate,
 	hideDate,
 	showCategory,
@@ -29,6 +37,7 @@ export function ActionLine({
 	action: Action;
 	categories: Category[];
 	states: State[];
+	priorities: Priority[];
 	hasShortDate?: boolean;
 	hideDate?: boolean;
 	showCategory?: boolean;
@@ -53,7 +62,7 @@ export function ActionLine({
 			<ContextMenuTrigger>
 				<div
 					title={action.title}
-					className={`py-1 px-2 w-full @[180px]:px-4 text-xs text-gray-400 font-medium border-l-4 rounded transition select-none bg-gray-900 flex gap-2 justify-between items-center ${
+					className={`py-1 px-2 w-full @[180px]:px-4 text-xs font-medium border-l-4 rounded transition select-none bg-gray-900 flex gap-2 justify-between items-center ${
 						edit
 							? "bg-gray-700"
 							: "hover:bg-gray-800 hover:text-gray-200"
@@ -78,7 +87,7 @@ export function ActionLine({
 					) : null}
 					<div className="flex items-center gap-2">
 						{showCategory && (
-							<CategoryIcons
+							<Icons
 								id={
 									categories.find(
 										(category) =>
@@ -88,7 +97,7 @@ export function ActionLine({
 								className="w-3 h-3 opacity-50"
 							/>
 						)}
-						<div className="line-clamp-1">
+						<div className="line-clamp-1 text-gray-300">
 							{edit ? (
 								<input
 									type="text"
@@ -110,8 +119,11 @@ export function ActionLine({
 					</div>
 
 					{!hideDate && (
-						<div className="text-gray-400 text-xs tabular-nums text-right whitespace-nowrap">
-							{formatActionDatetime(action.date, hasShortDate)}
+						<div className="text-gray-500 text-xs tabular-nums text-right whitespace-nowrap">
+							{formatActionDatetime({
+								date: action.date,
+								isDistance: true,
+							})}
 						</div>
 					)}
 				</div>
@@ -121,6 +133,7 @@ export function ActionLine({
 				categories={categories}
 				handleActions={handleActions}
 				states={states}
+				priorities={priorities}
 			/>
 		</ContextMenu>
 	);
@@ -129,11 +142,13 @@ export function ActionLine({
 export function ActionBlock({
 	action,
 	categories,
+	priorities,
 	states,
 	client,
 }: {
 	action: Action;
 	categories: Category[];
+	priorities: Priority[];
 	states: State[];
 	client?: Client;
 }) {
@@ -155,7 +170,7 @@ export function ActionBlock({
 		<ContextMenu>
 			<ContextMenuTrigger>
 				<div
-					className={`py-2 px-4 text-sm border-l-4 rounded bg-gray-900 hover:bg-gray-800 flex flex-col justify-between gap-2 border-${
+					className={`bg-gray-900 hover:bg-gray-800 py-2 px-4 text-sm border-l-4 rounded flex flex-col justify-between gap-2 transition border-${
 						states.find(
 							(state) => state.id === Number(action.state_id)
 						)?.slug
@@ -173,11 +188,13 @@ export function ActionBlock({
 							action={action}
 						/>
 					) : null}
+					{/* Title */}
 					<div className="line-clamp-1 leading-tight text-lg font-medium">
 						{action.title}
 					</div>
 					<div className="flex text-gray-400 items-center justify-between">
 						<div className="flex gap-2 items-center">
+							{/* Cliente */}
 							{client ? (
 								<Avatar className="w-5 h-5">
 									<AvatarFallback
@@ -194,8 +211,8 @@ export function ActionBlock({
 									</AvatarFallback>
 								</Avatar>
 							) : null}
-							<div className=" tracking-widest uppercase ">
-								<CategoryIcons
+							<div>
+								<Icons
 									id={
 										categories.find(
 											(category) =>
@@ -206,9 +223,22 @@ export function ActionBlock({
 									className="w-4"
 								/>
 							</div>
+							{action.priority_id === PRIORITY_HIGH ? (
+								<div>
+									<Icons
+										id={"high"}
+										className="w-4"
+										type="priority"
+									/>
+								</div>
+							) : null}
 						</div>
 						<div className="text-xs tabular-nums text-right whitespace-nowrap">
-							{formatActionDatetime(action.date, false, true)}
+							{formatActionDatetime({
+								date: action.date,
+								hasShortDate: false,
+								hasTime: true,
+							})}
 						</div>
 					</div>
 				</div>
@@ -218,6 +248,7 @@ export function ActionBlock({
 				categories={categories}
 				handleActions={handleActions}
 				states={states}
+				priorities={priorities}
 			/>
 		</ContextMenu>
 	);
@@ -227,10 +258,12 @@ export function ActionGrid({
 	action,
 	states,
 	categories,
+	priorities,
 }: {
 	action: Action;
 	states: State[];
 	categories: Category[];
+	priorities: Priority[];
 }) {
 	const [isHover, setHover] = useState(false);
 	const submit = useSubmit();
@@ -266,7 +299,7 @@ export function ActionGrid({
 					) : null}
 					<div></div>
 					<div
-						className={`font-medium line-clamp-3 text-center ${
+						className={`font-medium py-4 line-clamp-4 text-center ${
 							action.title.length > 30
 								? "text-sm leading-tight"
 								: action.title.length > 18
@@ -299,6 +332,7 @@ export function ActionGrid({
 				categories={categories}
 				handleActions={handleActions}
 				states={states}
+				priorities={priorities}
 			/>
 		</ContextMenu>
 	);
@@ -308,6 +342,7 @@ export function ListOfActions({
 	actions,
 	categories,
 	states,
+	priorities,
 	hideDate,
 	hasShortDate,
 	showCategory,
@@ -315,6 +350,7 @@ export function ListOfActions({
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
+	priorities: Priority[];
 	hideDate?: boolean;
 	hasShortDate?: boolean;
 	showCategory?: boolean;
@@ -327,6 +363,7 @@ export function ListOfActions({
 						action={action}
 						categories={categories}
 						states={states}
+						priorities={priorities}
 						key={action.id}
 						hideDate={hideDate}
 						hasShortDate={hasShortDate}
@@ -342,11 +379,13 @@ export function BlockOfActions({
 	actions,
 	categories,
 	states,
+	priorities,
 	max,
 }: {
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
+	priorities: Priority[];
 	max?: 1 | 2;
 }) {
 	return (
@@ -366,6 +405,7 @@ export function BlockOfActions({
 						categories={categories}
 						states={states}
 						key={action.id}
+						priorities={priorities}
 					/>
 				))}
 			</div>
@@ -377,10 +417,12 @@ export function GridOfActions({
 	actions,
 	categories,
 	states,
+	priorities,
 }: {
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
+	priorities: Priority[];
 }) {
 	return (
 		<div className="scrollbars">
@@ -391,6 +433,7 @@ export function GridOfActions({
 						categories={categories}
 						states={states}
 						key={action.id}
+						priorities={priorities}
 					/>
 				))}
 			</div>
@@ -473,16 +516,22 @@ function ContextMenuItems({
 	action,
 	categories,
 	states,
+	priorities,
 	handleActions,
 }: {
 	action: Action;
 	categories: Category[];
 	states: State[];
+	priorities: Priority[];
 	handleActions: (data: { [key: string]: string | number }) => void;
 }) {
+	const navigate = useNavigate();
 	return (
 		<ContextMenuContent className="bg-content">
-			<ContextMenuItem className="bg-item focus:bg-primary flex gap-2 items-center">
+			<ContextMenuItem
+				className="bg-item focus:bg-primary flex gap-2 items-center"
+				onSelect={() => navigate(`/dashboard/action/${action.id}`)}
+			>
 				<PencilLineIcon className="w-3 h-3" />
 				<span>Editar</span>
 			</ContextMenuItem>
@@ -499,35 +548,73 @@ function ContextMenuItems({
 				<ContextMenuPortal>
 					<ContextMenuSubContent className="bg-content">
 						{[
-							{ time: 1, text: "1 hora" },
-							{ time: 3, text: "3 horas" },
-							{ time: 8, text: "8 horas" },
-							{ time: 24, text: "1 dia" },
-							{ time: 3 * 24, text: "3 dias" },
-							{ time: 7 * 24, text: "1 semana" },
-							{ time: 30 * 24, text: "30 dias" },
-						].map((period) => (
-							<ContextMenuItem
-								key={period.time}
-								className="bg-item focus:bg-primary flex gap-2 items-center"
-								onSelect={() => {
-									let date = format(
-										addHours(
-											parseISO(action.date),
-											period.time
-										),
-										"y-MM-dd h:m:s"
-									);
+							{
+								title: "Horas",
+								periods: [
+									{ time: 1, text: "1 hora" },
+									{ time: 3, text: "3 horas" },
+									{ time: 8, text: "8 horas" },
+								],
+							},
+							{
+								title: "Dias",
+								periods: [
+									{ time: 24, text: "1 dia" },
+									{ time: 3 * 24, text: "3 dias" },
+								],
+							},
+							{
+								title: "Outros",
+								periods: [
+									{ time: 7 * 24, text: "1 semana" },
+									{ time: 30 * 24, text: "1 mês" },
+								],
+							},
+						].map((group, i) => (
+							<Fragment key={i}>
+								{i > 0 && (
+									<ContextMenuSeparator
+										key={`separator-${i}`}
+										className="bg-gray-300/20"
+									/>
+								)}
+								<ContextMenuLabel
+									className="mx-2"
+									key={`label-${i}`}
+								>
+									{group.title}
+								</ContextMenuLabel>
+								{group.periods.map((period) => (
+									<ContextMenuItem
+										key={`period-${period.time}`}
+										className="bg-item focus:bg-primary flex gap-2 items-center"
+										onSelect={() => {
+											let date = format(
+												addHours(
+													new Date().setHours(
+														parseISO(
+															action.date
+														).getHours(),
+														parseISO(
+															action.date
+														).getMinutes()
+													),
+													period.time
+												),
+												"yyyy-MM-dd h:m:s"
+											);
 
-									handleActions({
-										action: "action-update",
-										id: action.id,
-										date,
-									});
-								}}
-							>
-								{period.text}
-							</ContextMenuItem>
+											handleActions({
+												action: "action-update",
+												id: action.id,
+												date,
+											});
+										}}
+									>
+										{period.text}
+									</ContextMenuItem>
+								))}
+							</Fragment>
 						))}
 					</ContextMenuSubContent>
 				</ContextMenuPortal>
@@ -537,11 +624,63 @@ function ContextMenuItems({
 				<TrashIcon className="w-3 h-3" />
 				<span>Deletar</span>
 			</ContextMenuItem>
-			<ContextMenuSeparator className="bg-gray-300/25 " />
+			<ContextMenuSeparator className="bg-gray-300/20 " />
+			{/* Prioridade */}
+			<ContextMenuSub>
+				<ContextMenuSubTrigger className="bg-item focus:bg-primary flex gap-2 items-center">
+					<Icons
+						id={
+							priorities.find(
+								(priority) => priority.id === action.priority_id
+							)?.slug
+						}
+						className="w-3 h-3"
+						type="priority"
+					/>
+					<span>
+						{
+							priorities.find(
+								(priority) => priority.id === action.priority_id
+							)?.title
+						}
+					</span>
+				</ContextMenuSubTrigger>
+				<ContextMenuPortal>
+					<ContextMenuSubContent className="bg-content">
+						{priorities.map((priority) => (
+							<ContextMenuItem
+								key={priority.id}
+								className="bg-item flex gap-2 items-center"
+								onSelect={() => {
+									handleActions({
+										id: action.id,
+										priority_id: priority.id,
+										action: "action-update",
+									});
+								}}
+							>
+								<Icons
+									id={priority.slug}
+									type="priority"
+									className="w-3 h-3"
+								/>
+								{priority.title}
+							</ContextMenuItem>
+						))}
+					</ContextMenuSubContent>
+				</ContextMenuPortal>
+			</ContextMenuSub>
 			{/* Categoria */}
 			<ContextMenuSub>
 				<ContextMenuSubTrigger className="bg-item focus:bg-primary flex gap-2 items-center">
-					<TimerIcon className="w-3 h-3" />
+					<Icons
+						id={
+							categories.find(
+								(category) => category.id === action.category_id
+							)?.slug
+						}
+						className="w-3 h-3"
+					/>
 					<span>
 						{
 							categories.find(
@@ -565,6 +704,7 @@ function ContextMenuItems({
 									});
 								}}
 							>
+								<Icons id={category.slug} className="w-3 h-3" />
 								{category.title}
 							</ContextMenuItem>
 						))}
@@ -615,14 +755,22 @@ function ContextMenuItems({
 	);
 }
 
-export function formatActionDatetime(
-	date: Date | string,
-	hasShortDate?: boolean,
-	hasTime?: boolean
-) {
+export function formatActionDatetime({
+	date,
+	hasShortDate,
+	hasTime,
+	isDistance,
+}: {
+	date: Date | string;
+	hasShortDate?: boolean;
+	hasTime?: boolean;
+	isDistance?: boolean;
+}) {
 	date = typeof date === "string" ? parseISO(date) : date;
 
-	return hasShortDate
+	return isDistance
+		? formatDistanceToNow(date, { locale: ptBR, addSuffix: true })
+		: hasShortDate
 		? format(
 				date,
 				`d/M${
