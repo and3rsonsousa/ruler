@@ -31,13 +31,33 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 		return { data, error };
 	} else if (action === "action-update") {
-		const { data, error } = await supabase
-			.from("actions")
-			.update({ ...values })
-			.eq("id", id);
+		if (values["responsibles"]) {
+			const { data, error } = await supabase
+				.from("actions")
+				.update({
+					...values,
+					responsibles: values["responsibles"].toString().split(","),
+					updated_at: format(
+						Date.now(),
+						"yyyy-MM-dd'T'HH:mm:ss'+03:00:00'"
+					),
+				})
+				.eq("id", id);
+			return { data, error };
+		} else {
+			const { data, error } = await supabase
+				.from("actions")
+				.update({
+					...values,
+					updated_at: format(
+						Date.now(),
+						"yyyy-MM-dd'T'HH:mm:ss'+03:00:00'"
+					),
+				})
+				.eq("id", id);
 
-		console.log({ data, error });
-		return { data };
+			return { data, error };
+		}
 	} else if (action === "action-duplicate") {
 		const { data: oldAction } = await supabase
 			.from("actions")

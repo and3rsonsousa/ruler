@@ -81,9 +81,9 @@ export default function CreateAction({ date }: { date?: Date }) {
 				)}
 			</PopoverTrigger>
 			<PopoverContent className="bg-content md:px-6 w-[90dvw] mr-[5dvw] sm:max-w-md">
-				<pre className="text-xs">
+				{/* <pre className="text-xs">
 					{JSON.stringify(client, undefined, 2)}
-				</pre>
+				</pre> */}
 
 				{/* Título */}
 				<div
@@ -118,7 +118,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 				<div className="flex justify-center flex-wrap md:flex-nowrap md:justify-between gap-2">
 					<div className="flex items-center justify-between gap-1 w-full">
 						{/* Clientes */}
-						{JSON.stringify(client)}
+						{/* {JSON.stringify(client)} */}
 						<Select
 							value={action.client_id?.toString()}
 							onValueChange={(value) => {
@@ -131,7 +131,9 @@ export default function CreateAction({ date }: { date?: Date }) {
 							<SelectTrigger
 								tabIndex={3}
 								className={`bg-transparent border-none focus:ring-offset-0 ${
-									action.client_id ? "p-1 -ml-1" : "px-2 py-1"
+									action.client_id
+										? "p-1 pl-2 -ml-1"
+										: "px-2 py-1"
 								}`}
 							>
 								{action.client_id ? (
@@ -433,7 +435,7 @@ export default function CreateAction({ date }: { date?: Date }) {
 											...action,
 											date: format(
 												action.date,
-												"y-MM-dd hh:mm:ss",
+												"y-MM-dd HH:mm:ss",
 												{ locale: ptBR }
 											),
 										},

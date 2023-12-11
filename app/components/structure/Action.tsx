@@ -9,7 +9,12 @@ import {
 import ptBR from "date-fns/locale/pt-BR";
 import { CopyIcon, PencilLineIcon, TimerIcon, TrashIcon } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
-import { FINISHED_ID, PRIORITY_HIGH } from "~/lib/constants";
+import {
+	FINISHED_ID,
+	PRIORITY_HIGH,
+	PRIORITY_LOW,
+	PRIORITY_MEDIUM,
+} from "~/lib/constants";
 import { AvatarClient, Icons, ShortText } from "~/lib/helpers";
 import { Avatar, AvatarFallback } from "../ui/ui/avatar";
 import {
@@ -79,13 +84,13 @@ export function ActionLine({
 						setHover(false);
 					}}
 				>
-					{isHover ? (
+					{isHover && !edit && !edit ? (
 						<ShortcutActions
 							action={action}
 							handleActions={handleActions}
 						/>
 					) : null}
-					<div className="flex items-center gap-2 grow shrink-0">
+					<div className="flex items-center gap-1 grow shrink">
 						{showCategory && (
 							<Icons
 								id={
@@ -94,7 +99,7 @@ export function ActionLine({
 											category.id === action.category_id
 									)?.slug
 								}
-								className="w-3 h-3 opacity-50"
+								className="w-4 h-4 opacity-50"
 							/>
 						)}
 						<div className="relative w-full">
@@ -116,7 +121,7 @@ export function ActionLine({
 								}}
 							/>
 							<span
-								className={`absolute pointer-events-none top-0 left-0 line-clamp-1 ${
+								className={`absolute right-0 pointer-events-none top-0 left-0 line-clamp-1 ${
 									edit ? "opacity-0 " : "opacity-100"
 								}`}
 							>
@@ -196,7 +201,7 @@ export function ActionBlock({
 					}}
 					onClick={() => setEdit(true)}
 				>
-					{isHover ? (
+					{isHover && !edit ? (
 						<ShortcutActions
 							handleActions={handleActions}
 							action={action}
@@ -512,18 +517,37 @@ function ShortcutActions({
 					newId: window.crypto.randomUUID(),
 					created_at: format(
 						new Date(),
-						"yyyy-MM-dd'T'hh:mm:ss'+03:00:00'"
+						"yyyy-MM-dd'T'HH:mm:ss'+03:00:00'"
 					),
-					updated_at: format(
-						new Date(),
-						"yyyy-MM-dd'T'hh:mm:ss'+03:00:00'"
-					),
+
 					action: "action-duplicate",
 				});
 			}
 
 			if (key === "x") {
 				handleActions({ id: action.id, action: "action-delete" });
+			}
+
+			if (key === "1") {
+				handleActions({
+					id: action.id,
+					action: "action-update",
+					priority_id: PRIORITY_LOW,
+				});
+			}
+			if (key === "2") {
+				handleActions({
+					id: action.id,
+					action: "action-update",
+					priority_id: PRIORITY_MEDIUM,
+				});
+			}
+			if (key === "3") {
+				handleActions({
+					id: action.id,
+					action: "action-update",
+					priority_id: PRIORITY_HIGH,
+				});
 			}
 		};
 		window.addEventListener("keydown", keyDown);
@@ -548,6 +572,7 @@ function ContextMenuItems({
 	handleActions: (data: { [key: string]: string | number }) => void;
 }) {
 	const navigate = useNavigate();
+
 	return (
 		<ContextMenuContent className="bg-content">
 			<ContextMenuItem
@@ -573,9 +598,9 @@ function ContextMenuItems({
 							{
 								title: "Horas",
 								periods: [
-									{ time: 1, text: "1 hora" },
-									{ time: 3, text: "3 horas" },
-									{ time: 8, text: "8 horas" },
+									{ time: 1, text: "daqui a 1 hora" },
+									{ time: 3, text: "daqui a 3 horas" },
+									{ time: 8, text: "daqui a 8 horas" },
 								],
 							},
 							{
@@ -612,18 +637,25 @@ function ContextMenuItems({
 										className="bg-item focus:bg-primary flex gap-2 items-center"
 										onSelect={() => {
 											let date = format(
-												addHours(
-													new Date().setHours(
-														parseISO(
-															action.date
-														).getHours(),
-														parseISO(
-															action.date
-														).getMinutes()
-													),
-													period.time
-												),
-												"yyyy-MM-dd h:m:s"
+												period.time > 20
+													? addHours(
+															parseISO(
+																action.date
+															),
+															period.time
+													  )
+													: addHours(
+															new Date().setHours(
+																parseISO(
+																	action.date
+																).getHours(),
+																parseISO(
+																	action.date
+																).getMinutes()
+															),
+															period.time
+													  ),
+												"yyyy-MM-dd'T'HH:mm:ss"
 											);
 
 											handleActions({

@@ -10,17 +10,18 @@ export function CircleProgressItem({
 	classNames?: string;
 	rotate?: number;
 }) {
+	const size = 56;
 	const circle = useRef<SVGCircleElement>(null);
 	const circumference = (circle.current?.r.baseVal.value || 0) * Math.PI * 2;
 
 	return (
-		<svg width={48} height={48} className={`absolute inset-0`}>
+		<svg width={size} height={size} className={`absolute inset-0`}>
 			<circle
 				className={`${classNames} origin-center`}
 				ref={circle}
-				r={23}
-				cx={24}
-				cy={24}
+				r={size / 2 - 1}
+				cx={size / 2}
+				cy={size / 2}
 				fill="none"
 				strokeWidth={2}
 				strokeDasharray={circumference}

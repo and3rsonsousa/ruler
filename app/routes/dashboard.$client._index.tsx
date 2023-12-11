@@ -27,7 +27,8 @@ export const meta: MetaFunction = ({ matches }) => {
 export default function ClientPage() {
 	const matches = useMatches();
 	const { actions } = matches[2].data as DashboardClientType;
-	const { categories, states } = matches[1].data as DashboardDataType;
+	const { categories, states, priorities } = matches[1]
+		.data as DashboardDataType;
 
 	let optimisticActions = actions;
 
@@ -42,6 +43,7 @@ export default function ClientPage() {
 							categories={categories}
 							states={states}
 							max={2}
+							priorities={priorities}
 						/>
 					</div>
 					{getLateActions({ actions: optimisticActions })?.length ? (
@@ -52,6 +54,7 @@ export default function ClientPage() {
 									actions: optimisticActions,
 								})}
 								categories={categories}
+								priorities={priorities}
 								states={states}
 								showCategory={true}
 							/>
@@ -62,6 +65,7 @@ export default function ClientPage() {
 						<ListOfActions
 							actions={getNotFinishedActions(optimisticActions)}
 							categories={categories}
+							priorities={priorities}
 							states={states}
 							showCategory={true}
 						/>
@@ -74,6 +78,7 @@ export default function ClientPage() {
 						actions={getInstagramActions(optimisticActions)}
 						categories={categories}
 						states={states}
+						priorities={priorities}
 					/>
 				</div>
 			</div>

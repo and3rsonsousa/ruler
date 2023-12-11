@@ -28,21 +28,32 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "~/components/ui/ui/popover";
-import { ShortText } from "~/lib/helpers";
+import { AvatarClient, ShortText } from "~/lib/helpers";
 import createServerClient from "~/lib/supabase";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
 	const [headers, supabase] = createServerClient(request);
 	const urlRange = new URL(request.url).searchParams.get("range");
 
-	let range = request.url.includes("/calendar")
-		? {
-				from: startOfWeek(startOfMonth(new Date()), {
-					weekStartsOn: 0,
-				}),
-				to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
-		  }
-		: urlRange
+	// let range = request.url.includes("/calendar")
+	// 	? {
+	// 			from: startOfWeek(startOfMonth(new Date()), {
+	// 				weekStartsOn: 0,
+	// 			}),
+	// 			to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
+	// 	  }
+	// 	: urlRange
+	// 	? {
+	// 			from: parseISO(urlRange.split("---")[0]),
+	// 			to: parseISO(urlRange.split("---")[1]),
+	// 	  }
+	// 	: {
+	// 			from: startOfWeek(startOfMonth(new Date()), {
+	// 				weekStartsOn: 0,
+	// 			}),
+	// 			to: endOfWeek(endOfMonth(new Date()), { weekStartsOn: 0 }),
+	// 	  };
+	let range = urlRange
 		? {
 				from: parseISO(urlRange.split("---")[0]),
 				to: parseISO(urlRange.split("---")[1]),
@@ -127,22 +138,19 @@ export default function DashboardClient() {
 	);
 
 	return (
-		<div className="overflow-hidden debug h-full flex flex-col pb-4 gap-8">
+		<div className="overflow-hidden debug h-full flex flex-col pb-4 gap-8 px-8">
 			{/* Header */}
 			<div className="flex flex-col sm:flex-row gap-4 pt-4 justify-between items-center">
 				<div className="flex gap-4 items-center">
 					<div className="relative pl-2">
-						<Avatar style={{ viewTransitionName: "avatar-client" }}>
-							<AvatarFallback
-								style={{
-									backgroundColor:
-										client.bgColor || "bg-muted",
-									color: client.fgColor || "text-gray-300",
-								}}
-							>
-								{ShortText({ text: client.short })}
-							</AvatarFallback>
-						</Avatar>
+						<AvatarClient
+							client={client}
+							size="lg"
+							style={{
+								viewTransitionName: "avatar-client",
+							}}
+						/>
+
 						<CircleProgress actions={actions} />
 					</div>
 					<Link
