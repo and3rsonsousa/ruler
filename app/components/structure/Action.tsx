@@ -35,17 +35,15 @@ export function ActionLine({
 	categories,
 	states,
 	priorities,
-	hasShortDate,
-	hideDate,
 	showCategory,
+	date,
 }: {
 	action: Action;
 	categories: Category[];
 	states: State[];
 	priorities: Priority[];
-	hasShortDate?: boolean;
-	hideDate?: boolean;
 	showCategory?: boolean;
+	date?: { dateFormat?: 0 | 1 | 2 | 3 | 4; timeFormat?: 0 | 1 };
 }) {
 	const [edit, setEdit] = useState(false);
 	const [isHover, setHover] = useState(false);
@@ -84,6 +82,7 @@ export function ActionLine({
 						setHover(false);
 					}}
 				>
+					{/* Atalhos */}
 					{isHover && !edit && !edit ? (
 						<ShortcutActions
 							action={action}
@@ -130,11 +129,12 @@ export function ActionLine({
 						</div>
 					</div>
 
-					{!hideDate && (
-						<div className="text-gray-500 grow-0 shrink text-xs tabular-nums text-right whitespace-nowrap">
+					{date && (
+						<div className="text-gray-500 grow-0 shrink text-[10px] text-right whitespace-nowrap">
 							{formatActionDatetime({
 								date: action.date,
-								isDistance: true,
+								dateFormat: date.dateFormat,
+								timeFormat: date.timeFormat,
 							})}
 						</div>
 					)}
@@ -260,11 +260,11 @@ export function ActionBlock({
 								</div>
 							) : null}
 						</div>
-						<div className="text-xs tabular-nums text-right whitespace-nowrap">
+						<div className="text-xs text-right whitespace-nowrap">
 							{formatActionDatetime({
 								date: action.date,
-								hasShortDate: false,
-								hasTime: true,
+								dateFormat: 2,
+								timeFormat: 1,
 							})}
 						</div>
 					</div>
@@ -370,31 +370,28 @@ export function ListOfActions({
 	categories,
 	states,
 	priorities,
-	hideDate,
-	hasShortDate,
 	showCategory,
+	date,
 }: {
 	actions?: Action[];
 	categories: Category[];
 	states: State[];
 	priorities: Priority[];
-	hideDate?: boolean;
-	hasShortDate?: boolean;
 	showCategory?: boolean;
+	date?: { dateFormat?: 0 | 1 | 2 | 3 | 4; timeFormat?: 0 | 1 };
 }) {
 	return (
 		<div className="scrollbars">
 			<div className="min-h-full gap-1 flex flex-col @container">
 				{actions?.map((action) => (
 					<ActionLine
+						key={action.id}
 						action={action}
 						categories={categories}
 						states={states}
 						priorities={priorities}
-						key={action.id}
-						hideDate={hideDate}
-						hasShortDate={hasShortDate}
 						showCategory={showCategory}
+						date={date}
 					/>
 				))}
 			</div>
@@ -515,11 +512,8 @@ function ShortcutActions({
 				handleActions({
 					id: action.id,
 					newId: window.crypto.randomUUID(),
-					created_at: format(
-						new Date(),
-						"yyyy-MM-dd'T'HH:mm:ss'+03:00:00'"
-					),
-
+					created_at: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+					updated_at: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
 					action: "action-duplicate",
 				});
 			}
@@ -811,40 +805,52 @@ function ContextMenuItems({
 
 export function formatActionDatetime({
 	date,
-	hasShortDate,
-	hasTime,
-	isDistance,
+	dateFormat,
+	timeFormat,
 }: {
 	date: Date | string;
-	hasShortDate?: boolean;
-	hasTime?: boolean;
-	isDistance?: boolean;
+	dateFormat?: 0 | 1 | 2 | 3 | 4;
+	timeFormat?: 0 | 1;
 }) {
-	date = typeof date === "string" ? parseISO(date) : date;
+	// 0 - Sem informação de data
+	// 1 - Distância
+	// 2 - Curta
+	// 3 - Média
+	// 4 - Longa
 
-	return isDistance
-		? formatDistanceToNow(date, { locale: ptBR, addSuffix: true })
-		: hasShortDate
-		? format(
-				date,
-				`d/M${
+	// 0 - Sem informação de horas
+	// 1 - Com horas
+
+	date = typeof date === "string" ? parseISO(date) : date;
+	const formatString = (
+		dateFormat === 2
+			? `d/M${
 					!isSameYear(date.getFullYear(), new Date().getUTCFullYear())
 						? "/yy"
 						: ""
-				}`,
-				{ locale: ptBR }
-		  )
-		: format(
-				date,
-				`d 'de' MMM${
+			  }`
+			: dateFormat === 3
+			? `d 'de' MMM${
 					!isSameYear(date.getFullYear(), new Date().getUTCFullYear())
-						? " 'de' y"
+						? " 'de' yy"
 						: ""
-				}`.concat(
-					hasTime
-						? ` 'às' H'h'${!(date.getMinutes() === 0) ? "m" : ""}`
+			  }`
+			: dateFormat === 4
+			? `E, d 'de' MMMM${
+					!isSameYear(date.getFullYear(), new Date().getUTCFullYear())
+						? " 'de' yyy"
 						: ""
-				),
-				{ locale: ptBR }
-		  );
+			  }`
+			: ""
+	).concat(
+		timeFormat
+			? `${dateFormat ? (dateFormat === 4 ? " 'às' " : " - ") : ""}H'h'${
+					date.getMinutes() > 0 ? "m" : ""
+			  }`
+			: ""
+	);
+
+	return dateFormat === 1
+		? formatDistanceToNow(date, { locale: ptBR, addSuffix: true })
+		: format(date, formatString, { locale: ptBR });
 }

@@ -120,7 +120,7 @@ export default function ClientCalendar() {
 					{calendar.map((day, i) => (
 						<div
 							key={i}
-							className={`group space-y-2 ${
+							className={`group mb-2 space-y-1 ${
 								day.actions.length > 0 ? "" : "hidden md:block"
 							}`}
 						>
@@ -161,8 +161,11 @@ export default function ClientCalendar() {
 									states={states}
 									priorities={priorities}
 									actions={day.actions}
-									hideDate={true}
 									showCategory={true}
+									date={{
+										dateFormat: 0,
+										timeFormat: 1,
+									}}
 								/>
 							</div>
 						</div>

@@ -57,6 +57,10 @@ export default function ClientPage() {
 								priorities={priorities}
 								states={states}
 								showCategory={true}
+								date={{
+									dateFormat: 4,
+									timeFormat: 1,
+								}}
 							/>
 						</div>
 					) : null}
@@ -68,6 +72,10 @@ export default function ClientPage() {
 							priorities={priorities}
 							states={states}
 							showCategory={true}
+							date={{
+								dateFormat: 4,
+								timeFormat: 1,
+							}}
 						/>
 					</div>
 				</div>
